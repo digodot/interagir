@@ -279,17 +279,12 @@
                     <form id="aulaForm" onsubmit="saveAula(event)" class="space-y-4">
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Selecione a Turma</label>
-                            <select id="aula-turma-select" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"></select>
+                            <select id="aula-turma-select" required onchange="updateAulaMateriaDropdown()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none"></select>
                         </div>
                         <div>
                             <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Disciplina</label>
                             <select id="aula-materia" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
-                                <option value="Matemática">Matemática</option>
-                                <option value="Português">Português</option>
-                                <option value="História">História</option>
-                                <option value="Geografia">Geografia</option>
-                                <option value="Ciências">Ciências</option>
-                                <option value="Artes">Artes</option>
+                                <option value="">-- Selecione uma Turma Primeiro --</option>
                             </select>
                         </div>
                         <div>
@@ -353,12 +348,7 @@
                         <h2 class="text-sm font-bold text-slate-400 uppercase mb-3 tracking-wider">Lançar Notas</h2>
                         <form onsubmit="saveGrade(event)" class="space-y-3">
                             <select id="nota-materia" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
-                                <option value="Matemática">Matemática</option>
-                                <option value="Português">Português</option>
-                                <option value="História">História</option>
-                                <option value="Geografia">Geografia</option>
-                                <option value="Ciências">Ciências</option>
-                                <option value="Artes">Artes</option>
+                                <option value="">-- Selecione uma Turma Primeiro --</option>
                             </select>
                             <div class="grid grid-cols-2 gap-2">
                                 <input type="number" step="0.1" min="0" max="10" id="nota-b1" placeholder="B1" required class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none">
@@ -539,6 +529,47 @@
         </div>
     </div>
 
+    <!-- MODAL: GERENCIAR DISCIPLINAS DA TURMA -->
+    <div id="manageDisciplinesModal" class="fixed inset-0 bg-slate-900/80 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white rounded-t-3xl sm:rounded-3xl w-full max-w-xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <!-- Cabeçalho -->
+            <div class="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+                <div>
+                    <h2 class="text-xl font-black text-brandBlue">Gerenciar Disciplinas</h2>
+                    <p id="manage-disciplines-turma-nome" class="text-xs text-slate-400 uppercase tracking-wider font-bold mt-1">-</p>
+                </div>
+                <button onclick="closeManageDisciplinesModal()" class="w-10 h-10 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-full text-slate-400 transition-all">
+                    <i class="fa-solid fa-x"></i>
+                </button>
+            </div>
+
+            <!-- Adicionar Disciplina Manual -->
+            <div class="p-4 bg-yellow-50/50 border-b">
+                <div class="flex gap-2">
+                    <input type="text" id="manual-discipline-nome" placeholder="Nome da Disciplina (ex: Inglês)" class="flex-grow px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none">
+                    <button onclick="addDisciplineManual()" class="px-4 py-2 bg-brandYellow hover:bg-amber-500 text-slate-900 font-bold rounded-xl text-sm transition-all flex items-center gap-1">
+                        <i class="fa-solid fa-plus"></i> Adicionar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Lista de Disciplinas -->
+            <div class="overflow-y-auto p-4 flex-grow">
+                <table class="w-full text-left">
+                    <thead class="text-[10px] font-bold text-slate-400 uppercase border-b pb-2">
+                        <tr>
+                            <th class="pb-2">Nome da Disciplina</th>
+                            <th class="pb-2 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="manageDisciplinesTableBody" class="divide-y divide-slate-100">
+                        <!-- Injetado dinamicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- FOOTER -->
     <footer class="bg-brandDarkBlue text-white text-center py-4 text-xs font-medium border-t border-brandPink/30 mt-auto no-print">
         <p>&copy; 2026 Escola Interagir — Todos os direitos reservados.</p>
@@ -591,6 +622,7 @@
         let confirmAction = null;
         let editingAulaId = null;
         let editingStudentId = null;
+        let editingDisciplineId = null;
 
         // INICIALIZAÇÃO
         document.addEventListener('DOMContentLoaded', () => {
@@ -607,6 +639,25 @@
                 updateSliderLabel(`c${i}`, 3);
             }
         });
+
+        // Utilitário para garantir que turmas tenham uma lista de disciplinas
+        function getTurmaDisciplines(turmaId) {
+            const t = APP_STATE.turmas.find(x => x.id === turmaId);
+            if (!t) return [];
+            if (!t.disciplinas || t.disciplinas.length === 0) {
+                // Popula disciplinas padrão caso esteja vazio
+                t.disciplinas = [
+                    { id: `d-${t.id}-1`, nome: 'Matemática' },
+                    { id: `d-${t.id}-2`, nome: 'Português' },
+                    { id: `d-${t.id}-3`, nome: 'História' },
+                    { id: `d-${t.id}-4`, nome: 'Geografia' },
+                    { id: `d-${t.id}-5`, nome: 'Ciências' },
+                    { id: `d-${t.id}-6`, nome: 'Artes' }
+                ];
+                saveToLocalStorage();
+            }
+            return t.disciplinas;
+        }
 
         function saveToLocalStorage() {
             localStorage.setItem('escola_turmas', JSON.stringify(APP_STATE.turmas));
@@ -694,6 +745,15 @@
                 turno: document.getElementById('t-turno').value,
                 segmento: document.getElementById('t-segmento').value
             };
+            // Inicializar com disciplinas padrão
+            nova.disciplinas = [
+                { id: `d-${nova.id}-1`, nome: 'Matemática' },
+                { id: `d-${nova.id}-2`, nome: 'Português' },
+                { id: `d-${nova.id}-3`, nome: 'História' },
+                { id: `d-${nova.id}-4`, nome: 'Geografia' },
+                { id: `d-${nova.id}-5`, nome: 'Ciências' },
+                { id: `d-${nova.id}-6`, nome: 'Artes' }
+            ];
             APP_STATE.turmas.push(nova);
             saveToLocalStorage();
             renderTurmas();
@@ -730,9 +790,12 @@
                     <td class="py-3"><span class="px-2 py-0.5 bg-blue-50 text-brandBlue text-[10px] font-bold rounded-full">${t.segmento}</span></td>
                     <td class="py-3 text-center font-bold text-slate-600">${count}</td>
                     <td class="py-3 text-right">
-                        <div class="flex gap-1 justify-end">
-                            <button onclick="openManageStudentsModal('${t.id}')" class="px-3 py-1.5 bg-brandBlue hover:bg-blue-700 text-white font-bold rounded-lg text-xs flex items-center gap-1 transition-all">
+                        <div class="flex gap-1 justify-end flex-wrap">
+                            <button onclick="openManageStudentsModal('${t.id}')" class="px-2 py-1.5 bg-brandBlue hover:bg-blue-700 text-white font-bold rounded-lg text-xs flex items-center gap-1 transition-all">
                                 <i class="fa-solid fa-user-gear"></i> Alunos
+                            </button>
+                            <button onclick="openManageDisciplinesModal('${t.id}')" class="px-2 py-1.5 bg-brandYellow hover:bg-amber-600 text-slate-900 font-bold rounded-lg text-xs flex items-center gap-1 transition-all">
+                                <i class="fa-solid fa-book-open"></i> Disciplinas
                             </button>
                             <button onclick="deleteTurma('${t.id}')" class="w-8 h-8 flex items-center justify-center bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition-all">
                                 <i class="fa-solid fa-trash-can"></i>
@@ -742,6 +805,144 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // ================= GESTÃO DE DISCIPLINAS =================
+        function openManageDisciplinesModal(turmaId) {
+            const modal = document.getElementById('manageDisciplinesModal');
+            modal.dataset.turmaId = turmaId;
+            const t = APP_STATE.turmas.find(x => x.id === turmaId);
+            document.getElementById('manage-disciplines-turma-nome').textContent = t ? `${t.nome} — ${t.turno}` : '-';
+            renderManageDisciplinesTable(turmaId);
+            modal.classList.remove('hidden');
+        }
+
+        function closeManageDisciplinesModal() {
+            document.getElementById('manageDisciplinesModal').classList.add('hidden');
+            updateDropdowns();
+        }
+
+        function renderManageDisciplinesTable(turmaId) {
+            const tbody = document.getElementById('manageDisciplinesTableBody');
+            tbody.innerHTML = '';
+
+            const disciplinas = getTurmaDisciplines(turmaId);
+
+            if (disciplinas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="2" class="py-4 text-center text-slate-400 text-xs italic">Nenhuma disciplina cadastrada.</td></tr>`;
+                return;
+            }
+
+            disciplinas.forEach(disc => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-all text-xs border-b';
+
+                if (editingDisciplineId === disc.id) {
+                    // Modo Edição Inline da Disciplina
+                    tr.innerHTML = `
+                        <td class="py-2">
+                            <input type="text" id="edit-discipline-nome" value="${disc.nome}" class="w-full p-1.5 border rounded text-xs font-bold outline-none">
+                        </td>
+                        <td class="py-2 text-right">
+                            <div class="flex gap-1 justify-end">
+                                <button onclick="saveDisciplineEdit('${disc.id}', '${turmaId}')" class="w-8 h-8 flex items-center justify-center bg-emerald-500 text-white rounded-lg"><i class="fa-solid fa-check"></i></button>
+                                <button onclick="cancelDisciplineEdit('${turmaId}')" class="w-8 h-8 flex items-center justify-center bg-slate-300 text-slate-600 rounded-lg"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                        </td>
+                    `;
+                } else {
+                    // Modo Leitura da Disciplina
+                    tr.innerHTML = `
+                        <td class="py-3 font-semibold text-slate-800">${disc.nome}</td>
+                        <td class="py-3 text-right">
+                            <div class="flex gap-1 justify-end">
+                                <button onclick="startDisciplineEdit('${disc.id}', '${turmaId}')" class="w-7 h-7 flex items-center justify-center bg-blue-50 text-brandBlue rounded-lg"><i class="fa-solid fa-pen"></i></button>
+                                <button onclick="deleteDiscipline('${disc.id}', '${turmaId}')" class="w-7 h-7 flex items-center justify-center bg-rose-50 text-rose-600 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        function addDisciplineManual() {
+            const turmaId = document.getElementById('manageDisciplinesModal').dataset.turmaId;
+            const nomeInput = document.getElementById('manual-discipline-nome');
+            const nome = nomeInput.value.trim();
+
+            if (!nome) {
+                showToast("Por favor, digite o nome da disciplina.", "error");
+                return;
+            }
+
+            const t = APP_STATE.turmas.find(x => x.id === turmaId);
+            if (t) {
+                if (!t.disciplinas) t.disciplinas = [];
+                
+                // Evitar duplicidade
+                if (t.disciplinas.some(d => d.nome.toLowerCase() === nome.toLowerCase())) {
+                    showToast("Esta disciplina já está cadastrada nesta turma.", "error");
+                    return;
+                }
+
+                t.disciplinas.push({
+                    id: `d-${Date.now()}`,
+                    nome: nome
+                });
+                saveToLocalStorage();
+                renderManageDisciplinesTable(turmaId);
+                nomeInput.value = '';
+                showToast("Disciplina adicionada com sucesso!");
+            }
+        }
+
+        function startDisciplineEdit(id, turmaId) {
+            editingDisciplineId = id;
+            renderManageDisciplinesTable(turmaId);
+        }
+
+        function cancelDisciplineEdit(turmaId) {
+            editingDisciplineId = null;
+            renderManageDisciplinesTable(turmaId);
+        }
+
+        function saveDisciplineEdit(id, turmaId) {
+            const t = APP_STATE.turmas.find(x => x.id === turmaId);
+            const novoNome = document.getElementById('edit-discipline-nome').value.trim();
+
+            if (!novoNome) {
+                showToast("O nome da disciplina não pode ficar em branco.", "error");
+                return;
+            }
+
+            if (t && t.disciplinas) {
+                const index = t.disciplinas.findIndex(x => x.id === id);
+                if (index !== -1) {
+                    t.disciplinas[index].nome = novoNome;
+                    saveToLocalStorage();
+                    showToast("Disciplina atualizada!");
+                }
+            }
+            editingDisciplineId = null;
+            renderManageDisciplinesTable(turmaId);
+        }
+
+        function deleteDiscipline(id, turmaId) {
+            const t = APP_STATE.turmas.find(x => x.id === turmaId);
+            if (!t || !t.disciplinas) return;
+            const disc = t.disciplinas.find(x => x.id === id);
+
+            showConfirm(
+                "Remover Disciplina",
+                `Tem certeza que deseja excluir a disciplina "${disc.nome}"? Todas as notas vinculadas a ela serão mantidas, mas novos lançamentos necessitarão recadastrá-la.`,
+                () => {
+                    t.disciplinas = t.disciplinas.filter(x => x.id !== id);
+                    saveToLocalStorage();
+                    renderManageDisciplinesTable(turmaId);
+                    showToast("Disciplina removida.");
+                }
+            );
         }
 
         // ================= GESTÃO DE ALUNOS =================
@@ -999,6 +1200,21 @@
 
 
         // ================= GESTÃO DE AULAS =================
+        function updateAulaMateriaDropdown() {
+            const tId = document.getElementById('aula-turma-select').value;
+            const select = document.getElementById('aula-materia');
+            select.innerHTML = '<option value="">-- Selecione a Disciplina --</option>';
+            if (!tId) return;
+
+            const disciplinas = getTurmaDisciplines(tId);
+            disciplinas.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.nome;
+                opt.textContent = d.nome;
+                select.appendChild(opt);
+            });
+        }
+
         function saveAula(e) {
             e.preventDefault();
             const form = document.getElementById('aulaForm');
@@ -1036,6 +1252,7 @@
 
             editingAulaId = a.id;
             document.getElementById('aula-turma-select').value = a.turmaId;
+            updateAulaMateriaDropdown(); // Atualiza dropdown antes de selecionar a matéria
             document.getElementById('aula-materia').value = a.materia;
             document.getElementById('aula-data').value = a.data;
             document.getElementById('aula-conteudo').value = a.conteudo;
@@ -1210,6 +1427,9 @@
             const select = document.getElementById('boletim-aluno-select');
             select.innerHTML = '<option value="">-- Escolha o Aluno --</option>';
 
+            const materiaSelect = document.getElementById('nota-materia');
+            materiaSelect.innerHTML = '<option value="">-- Escolha a Disciplina --</option>';
+
             if (!tId) return;
             const list = APP_STATE.alunos.filter(a => a.turmaId === tId);
             list.forEach(al => {
@@ -1217,6 +1437,15 @@
                 opt.value = al.id;
                 opt.textContent = al.nome;
                 select.appendChild(opt);
+            });
+
+            // Adiciona disciplinas de forma dinâmica no seletor de lançamento
+            const disciplinas = getTurmaDisciplines(tId);
+            disciplinas.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.nome;
+                opt.textContent = d.nome;
+                materiaSelect.appendChild(opt);
             });
         }
 
@@ -1249,6 +1478,10 @@
             }
 
             const mat = document.getElementById('nota-materia').value;
+            if (!mat) {
+                showToast("Selecione primeiro a disciplina.", "error");
+                return;
+            }
             const b1 = parseFloat(document.getElementById('nota-b1').value).toFixed(1);
             const b2 = parseFloat(document.getElementById('nota-b2').value).toFixed(1);
 
@@ -1330,7 +1563,8 @@
             document.getElementById('bol-print-telefone').textContent = al.telefone || 'Não Informado';
             document.getElementById('bol-print-ano').textContent = t.ano;
 
-            const materias = ['Matemática', 'Português', 'História', 'Geografia', 'Ciências', 'Artes'];
+            // Busca as disciplinas dinamicamente de acordo com a turma
+            const materias = getTurmaDisciplines(t.id).map(d => d.nome);
             const alunoGrades = APP_STATE.notas[aId] || {};
 
             materias.forEach(mat => {
