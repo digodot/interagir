@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Escola Interagir - Gestão de Turmas e Alunos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandBlue: '#1560CD',
+                        brandPink: '#D91A9C',
+                        brandYellow: '#F4B41A',
+                        brandDarkBlue: '#0F2C59',
+                        brandLightBg: '#F3F7FC'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .brand-gradient-border { background: linear-gradient(135deg, #F4B41A, #D91A9C, #1560CD); }
+        .active-tab { border-bottom: 4px solid #D91A9C; color: #F4B41A !important; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #D91A9C; cursor: pointer; border: 2px solid #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        @media print { body * { visibility: hidden; } #printArea, #printArea * { visibility: visible; } #printArea { position: absolute; left: 0; top: 0; width: 100%; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body class="bg-brandLightBg text-slate-800 min-h-screen flex flex-col">
+
+    <!-- TOASTS DE NOTIFICAÇÃO CUSTOMIZADOS -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- MODAL DE CONFIRMAÇÃO PERSONALIZADO -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 z-[90] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-all">
+            <div class="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center mb-4">
+                <i class="fa-solid fa-triangle-exclamation text-rose-500 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2" id="confirmTitle">Confirmar Ação</h3>
+            <p class="text-sm text-slate-500 mb-6" id="confirmText">Tem certeza que deseja realizar esta ação?</p>
+            <div class="flex justify-end gap-3">
+                <button id="confirmCancelBtn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg text-sm">Cancelar</button>
+                <button id="confirmConfirmBtn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-sm">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER / TOPBAR -->
+    <header class="bg-brandBlue text-white shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="relative w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md p-1">
+                    <div class="absolute inset-0 rounded-full brand-gradient-border -z-10 p-0.5">
+                        <div class="w-full h-full bg-white rounded-full"></div>
+                    </div>
+                    <div class="w-full h-full bg-brandBlue rounded-full flex items-center justify-center relative overflow-hidden">
+                        <svg viewBox="0 0 100 100" class="w-12 h-12">
+                            <circle cx="30" cy="45" r="10" fill="#0F2C59" /><path d="M15 75 C 15 55, 45 55, 45 75 Z" fill="#0F2C59" />
+                            <circle cx="50" cy="35" r="10" fill="#F4B41A" /><path d="M35 65 C 35 48, 65 48, 65 65 Z" fill="#F4B41A" />
+                            <circle cx="65" cy="48" r="11" fill="#E59400" /><path d="M48 80 C 48 60, 82 60, 82 80 Z" fill="#E59400" />
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tight leading-none"><span class="text-brandYellow">Escola</span> Interagir</h1>
+                    <p class="text-xs text-blue-100 uppercase tracking-widest mt-1">Gestão de Turmas e Alunos</p>
+                </div>
+            </div>
+            <nav class="flex flex-wrap gap-1">
+                <button onclick="switchTab('turmas')" id="tab-turmas" class="px-4 py-2 rounded-t-lg font-bold transition-all text-white/80 hover:text-white active-tab"><i class="fa-solid fa-graduation-cap mr-2"></i>Turmas</button>
+                <button onclick="switchTab('aulas')" id="tab-aulas" class="px-4 py-2 rounded-t-lg font-bold transition-all text-white/80 hover:text-white"><i class="fa-solid fa-book-bookmark mr-2"></i>Aulas</button>
+                <button onclick="switchTab('frequencia')" id="tab-frequencia" class="px-4 py-2 rounded-t-lg font-bold transition-all text-white/80 hover:text-white"><i class="fa-solid fa-calendar-check mr-2"></i>Frequência</button>
+                <button onclick="switchTab('boletins')" id="tab-boletins" class="px-4 py-2 rounded-t-lg font-bold transition-all text-white/80 hover:text-white"><i class="fa-solid fa-file-invoice mr-2"></i>Boletins</button>
+            </nav>
+        </div>
+        <div class="h-1 bg-brandPink"></div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 no-print">
+
+        <!-- SEÇÃO TURMAS -->
+        <section id="sec-turmas" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Criar Nova Turma Manualmente -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border-t-4 border-brandBlue">
+                    <h2 class="text-xl font-bold text-brandBlue mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle text-brandPink"></i> Criar Nova Turma
+                    </h2>
+                    <form onsubmit="createTurma(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Nome da Turma</label>
+                            <input type="text" id="t-nome" placeholder="Ex: 1º Ano A" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-brandBlue">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Ano Letivo</label>
+                                <input type="number" id="t-ano" value="2026" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Turno</label>
+                                <select id="t-turno" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none">
+                                    <option value="Manhã">Manhã</option>
+                                    <option value="Tarde">Tarde</option>
+                                    <option value="Integral">Integral</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-500 mb-1">Segmento</label>
+                            <select id="t-segmento" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none">
+                                <option value="Infantil">Educação Infantil</option>
+                                <option value="Fundamental I">Ensino Fundamental I</option>
+                                <option value="Fundamental II">Ensino Fundamental II</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-brandBlue hover:bg-blue-700 text-white font-bold rounded-lg transition-all shadow-md">
+                            Salvar Turma
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Lista de Turmas -->
+                <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border-t-4 border-brandBlue">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-brandBlue flex items-center gap-2">
+                            <i class="fa-solid fa-list-ul text-brandYellow"></i> Turmas Cadastradas
+                        </h2>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-100 text-slate-400 text-sm">
+                                    <th class="pb-3 font-semibold">Turma</th>
+                                    <th class="pb-3 font-semibold">Turno / Ano</th>
+                                    <th class="pb-3 font-semibold">Alunos</th>
+                                    <th class="pb-3 font-semibold text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="turmasTableBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MODAL DE IMPORTAÇÃO DE ALUNOS -->
+        <div id="importModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl relative">
+                <button onclick="closeImportModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
+                <h2 class="text-2xl font-bold text-brandBlue mb-2">Importar Alunos</h2>
+                <p class="text-slate-500 text-sm mb-6">Turma selecionada: <strong id="modalTurmaName" class="text-brandPink"></strong></p>
+                
+                <div id="dropZone" class="border-2 border-dashed border-brandBlue/30 hover:border-brandPink rounded-2xl p-10 text-center cursor-pointer transition-all bg-blue-50/30 hover:bg-blue-50 mb-4">
+                    <input type="file" id="fileInput" accept=".csv, .xlsx, .xls" class="hidden">
+                    <i class="fa-solid fa-users-rectangle text-5xl text-brandBlue mb-4"></i>
+                    <p class="font-bold text-slate-700">Selecione a lista de alunos</p>
+                    <p class="text-xs text-slate-400 mt-2">Formatos aceitos: Excel (.xlsx, .xls) ou CSV</p>
+                </div>
+                
+                <div class="bg-amber-50 border-l-4 border-brandYellow p-4 rounded-r-lg">
+                    <p class="text-xs text-amber-800 font-medium">A planilha deve conter uma coluna chamada <strong>"Nome"</strong>. Colunas opcionais detectadas automaticamente: <strong>"Matricula"</strong>, <strong>"Responsável"</strong> (ou Pai/Mãe) e <strong>"Telefone"</strong> (ou Contato/Celular).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL DE GERENCIAMENTO DE ALUNOS DA TURMA -->
+        <div id="manageStudentsModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-3xl w-full p-8 shadow-2xl relative flex flex-col max-h-[85vh]">
+                <button onclick="closeManageStudentsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
+                <h2 class="text-2xl font-bold text-brandBlue mb-2">Gerenciar Alunos</h2>
+                <p class="text-slate-500 text-sm mb-6">Turma: <strong id="manageStudentsTurmaName" class="text-brandPink"></strong></p>
+                
+                <div class="overflow-y-auto flex-grow border border-slate-100 rounded-2xl p-4">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-xs font-bold text-slate-400 uppercase">
+                                <th class="pb-3">Matrícula</th>
+                                <th class="pb-3">Nome do Aluno</th>
+                                <th class="pb-3 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="manageStudentsTableBody" class="divide-y divide-slate-100 text-sm animate-fade-in"></tbody>
+                    </table>
+                    <div id="emptyStudentsState" class="hidden py-12 text-center text-slate-400">
+                        <i class="fa-solid fa-users-slash text-4xl mb-3 text-slate-300"></i>
+                        <p>Nenhum aluno cadastrado nesta turma.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO AULAS -->
+        <section id="sec-aulas" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border-t-4 border-brandBlue">
+                    <h2 class="text-xl font-bold text-brandBlue mb-4" id="aula-form-title"><i class="fa-solid fa-chalkboard-user text-brandPink mr-2"></i>Registrar Aula</h2>
+                    <form id="aulaForm" onsubmit="saveAula(event)" class="space-y-4">
+                        <select id="aula-turma-select" required class="w-full px-3 py-2 border rounded-lg focus:border-brandBlue"></select>
+                        <select id="aula-materia" required class="w-full px-3 py-2 border rounded-lg focus:border-brandBlue">
+                            <option value="Matemática">Matemática</option>
+                            <option value="Português">Português</option>
+                            <option value="História">História</option>
+                            <option value="Geografia">Geografia</option>
+                            <option value="Ciências">Ciências</option>
+                            <option value="Artes">Artes</option>
+                        </select>
+                        <input type="date" id="aula-data" required class="w-full px-3 py-2 border rounded-lg">
+                        <textarea id="aula-conteudo" rows="3" placeholder="Conteúdo..." required class="w-full px-3 py-2 border rounded-lg"></textarea>
+                        <button type="submit" class="w-full py-3 bg-brandBlue text-white font-bold rounded-lg hover:bg-blue-700 transition-all">Salvar Aula</button>
+                    </form>
+                </div>
+                <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border-t-4 border-brandBlue">
+                    <h2 class="text-xl font-bold text-brandBlue mb-4">Diário de Classe</h2>
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-slate-400 text-sm">
+                                <th class="pb-2">Data</th>
+                                <th class="pb-2">Turma</th>
+                                <th class="pb-2">Matéria</th>
+                                <th class="pb-2">Conteúdo</th>
+                                <th class="pb-2 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aulasTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                    <div id="emptyAulasState" class="hidden py-12 text-center text-slate-400">
+                        <i class="fa-solid fa-calendar-minus text-4xl mb-3 text-slate-300"></i>
+                        <p>Nenhuma aula registrada nesta turma.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO FREQUÊNCIA -->
+        <section id="sec-frequencia" class="tab-content hidden">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border-t-4 border-brandBlue">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <select id="freq-turma-select" onchange="loadFrequenciaAlunos()" class="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-brandBlue"></select>
+                        <input type="date" id="freq-data" onchange="loadFrequenciaAlunos()" class="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:border-brandBlue">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="setAllAttendance(true)" class="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-bold text-xs transition-all">Todos Presentes</button>
+                        <button onclick="setAllAttendance(false)" class="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg font-bold text-xs transition-all">Todos Faltaram</button>
+                    </div>
+                </div>
+
+                <!-- Painel de aulas registradas no dia selecionado -->
+                <div class="mb-6 p-4 bg-slate-50 border border-slate-200/60 rounded-xl">
+                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Aulas registradas nesta data:</span>
+                    <div id="freq-aulas-do-dia" class="flex flex-wrap gap-2 text-sm text-slate-600 font-semibold">
+                        <!-- Gerado Dinamicamente -->
+                        <span class="text-slate-400 text-xs italic font-medium">Selecione uma turma e data para carregar as disciplinas do dia...</span>
+                    </div>
+                </div>
+
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="text-slate-400 text-xs uppercase tracking-wider font-semibold border-b border-slate-100">
+                            <th class="pb-3">Matrícula</th>
+                            <th class="pb-3">Aluno</th>
+                            <th class="pb-3 text-center">Frequência</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alunosFreqTableBody" class="divide-y divide-slate-100"></tbody>
+                </table>
+
+                <div class="mt-6 flex justify-end">
+                    <button onclick="saveFrequencia()" class="px-6 py-3 bg-brandPink text-white font-bold rounded-lg shadow-md hover:bg-pink-600 transition-all">Salvar Chamada</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO BOLETINS -->
+        <section id="sec-boletins" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="space-y-6">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border-t-4 border-brandBlue">
+                        <h2 class="text-lg font-bold text-brandBlue mb-4">Selecionar Aluno</h2>
+                        <select id="boletim-turma-select" onchange="updateBoletimAlunosDropdown()" class="w-full px-3 py-2 border rounded-lg mb-3"></select>
+                        <select id="boletim-aluno-select" onchange="syncSelectedAluno()" class="w-full px-3 py-2 border rounded-lg"></select>
+                    </div>
+                    
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border-t-4 border-brandBlue">
+                        <h2 class="text-lg font-bold text-brandBlue mb-4">Lançar Notas</h2>
+                        <form onsubmit="saveGrade(event)" class="space-y-3">
+                            <select id="nota-materia" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="Matemática">Matemática</option>
+                                <option value="Português">Português</option>
+                                <option value="História">História</option>
+                                <option value="Geografia">Geografia</option>
+                                <option value="Ciências">Ciências</option>
+                                <option value="Artes">Artes</option>
+                            </select>
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="number" step="0.1" min="0" max="10" id="nota-b1" placeholder="Nota 1" class="px-3 py-2 border rounded-lg">
+                                <input type="number" step="0.1" min="0" max="10" id="nota-b2" placeholder="Nota 2" class="px-3 py-2 border rounded-lg">
+                            </div>
+                            <button type="submit" class="w-full py-2 bg-brandBlue text-white font-bold rounded-lg">Lançar</button>
+                        </form>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border-t-4 border-brandBlue">
+                        <h2 class="text-lg font-bold text-brandBlue mb-4">Rubricas de Atitude</h2>
+                        <div class="space-y-4" id="behaviorInputs"></div>
+                        <button onclick="saveBehavior()" class="w-full mt-4 py-2 bg-brandPink text-white font-bold rounded-lg">Gravar Comportamento</button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2">
+                    <div id="printArea" class="bg-white p-6 rounded-2xl shadow-sm border-t-4 border-brandBlue">
+                        <div class="flex justify-between border-b-2 border-brandBlue pb-4 mb-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-10 h-10 bg-brandBlue rounded-full flex items-center justify-center text-white font-bold">EI</div>
+                                <h3 class="font-bold text-brandBlue">Escola Interagir</h3>
+                            </div>
+                            <button onclick="window.print()" class="no-print px-4 py-1 bg-brandPink text-white rounded-lg text-sm font-bold">Imprimir</button>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg mb-4 text-xs font-semibold">
+                            <div>Aluno: <span id="bol-print-nome" class="font-bold text-brandBlue block mt-0.5 text-sm">-</span></div>
+                            <div>Turma: <span id="bol-print-turma" class="font-bold text-brandBlue block mt-0.5 text-sm">-</span></div>
+                            <div>Responsável: <span id="bol-print-responsavel" class="font-bold text-brandPink block mt-0.5 text-sm">-</span></div>
+                            <div>Contato: <span id="bol-print-telefone" class="font-bold text-brandPink block mt-0.5 text-sm">-</span></div>
+                        </div>
+                        
+                        <table class="w-full text-left border text-sm border-collapse">
+                            <thead class="bg-brandBlue text-white">
+                                <tr>
+                                    <th class="p-2 border">Matéria</th>
+                                    <th class="p-2 border text-center">B1</th>
+                                    <th class="p-2 border text-center">B2</th>
+                                    <th class="p-2 border text-center">Média</th>
+                                    <th class="p-2 border text-center">Faltas (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bol-table-body"></tbody>
+                        </table>
+
+                        <div class="mt-6 border p-4 rounded-lg bg-slate-50/50">
+                            <h4 class="text-xs font-bold text-brandBlue mb-4 uppercase">Análise de Comportamento</h4>
+                            <div id="bol-behavior-summary" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let APP_STATE = {
+            turmas: JSON.parse(localStorage.getItem('escola_turmas')) || [],
+            alunos: JSON.parse(localStorage.getItem('escola_alunos')) || [],
+            aulas: JSON.parse(localStorage.getItem('escola_aulas')) || [],
+            frequencia: JSON.parse(localStorage.getItem('escola_frequencia')) || {},
+            notas: JSON.parse(localStorage.getItem('escola_notas')) || {},
+            comportamento: JSON.parse(localStorage.getItem('escola_comportamento')) || {},
+            importContextTurmaId: null,
+            manageContextTurmaId: null,
+            transferringStudentId: null
+        };
+
+        let editingStudentId = null;  // Variável para controle da edição inline de alunos
+        let editContextAulaId = null;  // Variável para controle da edição de aulas
+
+        const RUBRICS_MAP = {
+            1: { name: 'Insuficiente', color: 'bg-rose-100 text-rose-700', bar: 'bg-rose-500' },
+            2: { name: 'Regular', color: 'bg-amber-100 text-amber-700', bar: 'bg-amber-500' },
+            3: { name: 'Bom', color: 'bg-blue-100 text-brandBlue', bar: 'bg-brandBlue' },
+            4: { name: 'Muito Bom', color: 'bg-purple-100 text-purple-700', bar: 'bg-purple-600' },
+            5: { name: 'Excelente', color: 'bg-emerald-100 text-emerald-700', bar: 'bg-emerald-500' }
+        };
+
+        const BEHAVIOR_CRITERIA = [
+            { id: 'c1', label: '1 - Participação nas atividades', desc: 'Demonstra interesse pelas aulas, faz perguntas, contribui com ideias e participa das discussões propostas.' },
+            { id: 'c2', label: '2 - Relacionamento interpessoal', desc: 'Interage de forma respeitosa com colegas e professores, coopera em trabalhos em grupo e contribui para um ambiente harmonioso.' },
+            { id: 'c3', label: '3 - Compromisso e responsabilidade', desc: 'Cumpre prazos, traz os materiais necessários, realiza as atividades propostas e demonstra organização.' },
+            { id: 'c4', label: '4 - Atenção e concentração', desc: 'Mantém o foco durante as explicações e atividades, seguindo orientações e evitando distrações frequentes.' },
+            { id: 'c5', label: '5 - Autonomia e iniciativa', desc: 'Busca soluções para problemas, realiza tarefas com independência e demonstra disposição para aprender além do solicitado.' }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTurmas();
+            updateDropdowns();
+            renderAulas();
+            renderBehaviorInputs();
+            document.getElementById('aula-data').value = new Date().toISOString().split('T')[0];
+            document.getElementById('freq-data').value = new Date().toISOString().split('T')[0];
+        });
+
+        // TOASTS DE SUPORTE
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-xl shadow-lg text-white font-bold text-sm flex items-center gap-2 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto min-w-[250px] ${
+                type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-rose-600' : 'bg-brandYellow text-slate-900'
+            }`;
+            const icon = document.createElement('i');
+            icon.className = type === 'success' ? 'fa-solid fa-circle-check' : type === 'error' ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-exclamation';
+            toast.appendChild(icon);
+            toast.appendChild(document.createTextNode(message));
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 50);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // CONFIRMAÇÕES DE ALERTA CUSTOMIZADAS
+        let currentConfirmCallback = null;
+        function showConfirm(title, message, onConfirm) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmText').textContent = message;
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('hidden');
+            currentConfirmCallback = onConfirm;
+        }
+
+        document.getElementById('confirmConfirmBtn').onclick = () => {
+            document.getElementById('confirmModal').classList.add('hidden');
+            if (currentConfirmCallback) currentConfirmCallback();
+            currentConfirmCallback = null;
+        };
+
+        document.getElementById('confirmCancelBtn').onclick = () => {
+            document.getElementById('confirmModal').classList.add('hidden');
+            currentConfirmCallback = null;
+        };
+
+        function saveToLocalStorage() {
+            localStorage.setItem('escola_turmas', JSON.stringify(APP_STATE.turmas));
+            localStorage.setItem('escola_alunos', JSON.stringify(APP_STATE.alunos));
+            localStorage.setItem('escola_aulas', JSON.stringify(APP_STATE.aulas));
+            localStorage.setItem('escola_frequencia', JSON.stringify(APP_STATE.frequencia));
+            localStorage.setItem('escola_notas', JSON.stringify(APP_STATE.notas));
+            localStorage.setItem('escola_comportamento', JSON.stringify(APP_STATE.comportamento));
+        }
+
+        function switchTab(t) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('nav button').forEach(el => el.classList.remove('active-tab'));
+            document.getElementById(`sec-${t}`).classList.remove('hidden');
+            document.getElementById(`tab-${t}`).classList.add('active-tab');
+            updateDropdowns();
+        }
+
+        // ================= TURMAS =================
+        function createTurma(e) {
+            e.preventDefault();
+            const nova = {
+                id: `t-${Date.now()}`,
+                nome: document.getElementById('t-nome').value,
+                ano: document.getElementById('t-ano').value,
+                turno: document.getElementById('t-turno').value,
+                segmento: document.getElementById('t-segmento').value
+            };
+            APP_STATE.turmas.push(nova);
+            saveToLocalStorage();
+            renderTurmas();
+            updateDropdowns();
+            showToast("Turma criada com sucesso!");
+            e.target.reset();
+        }
+
+        function deleteTurma(id) {
+            const turma = APP_STATE.turmas.find(t => t.id === id);
+            if (!turma) return;
+            showConfirm(
+                "Excluir Turma?", 
+                `Tem certeza que deseja excluir a turma "${turma.nome}"? Todos os alunos e históricos vinculados serão perdidos.`,
+                () => {
+                    APP_STATE.turmas = APP_STATE.turmas.filter(t => t.id !== id);
+                    APP_STATE.alunos = APP_STATE.alunos.filter(a => a.turmaId !== id);
+                    saveToLocalStorage();
+                    renderTurmas();
+                    updateDropdowns();
+                    showToast("Turma excluída com sucesso!", "warning");
+                }
+            );
+        }
+
+        function renderTurmas() {
+            const tbody = document.getElementById('turmasTableBody');
+            tbody.innerHTML = '';
+            APP_STATE.turmas.forEach(t => {
+                const count = APP_STATE.alunos.filter(a => a.turmaId === t.id).length;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-4 font-bold text-brandBlue">${t.nome}</td>
+                    <td class="py-4 text-slate-500 text-sm">${t.turno} / ${t.ano}</td>
+                    <td class="py-4">
+                        <button onclick="openManageStudentsModal('${t.id}', '${t.nome}')" class="px-2.5 py-1 bg-brandBlue/10 hover:bg-brandBlue hover:text-white transition-all text-brandBlue rounded-lg text-xs font-bold">
+                            <i class="fa-solid fa-users mr-1"></i> ${count} Alunos
+                        </button>
+                    </td>
+                    <td class="py-4 text-right flex justify-end gap-1.5">
+                        <button onclick="openImportModal('${t.id}', '${t.nome}')" class="px-3 py-1.5 bg-brandPink/10 text-brandPink rounded-lg text-xs font-bold hover:bg-brandPink hover:text-white transition-all">
+                            <i class="fa-solid fa-file-import mr-1"></i> Importar Alunos
+                        </button>
+                        <button onclick="deleteTurma('${t.id}')" class="p-1.5 bg-rose-50 text-rose-600 rounded-lg text-xs hover:bg-rose-600 hover:text-white transition-all" title="Excluir Turma">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ================= ALUNOS (EXCEL E CSV) =================
+        function openImportModal(id, nome) {
+            APP_STATE.importContextTurmaId = id;
+            document.getElementById('modalTurmaName').textContent = nome;
+            document.getElementById('importModal').classList.remove('hidden');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.add('hidden');
+            APP_STATE.importContextTurmaId = null;
+        }
+
+        document.getElementById('dropZone').onclick = () => document.getElementById('fileInput').click();
+        document.getElementById('fileInput').onchange = (e) => processStudentsFile(e.target.files[0]);
+
+        function processStudentsFile(file) {
+            if (!file || !APP_STATE.importContextTurmaId) return;
+            const reader = new FileReader();
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            
+            if (fileExtension === 'csv') {
+                reader.onload = (e) => {
+                    const csvText = e.target.result;
+                    const lines = csvText.split(/\r?\n/);
+                    let count = 0;
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+                        const columns = line.includes(';') ? line.split(';') : line.split(',');
+                        if (columns[0]) {
+                            APP_STATE.alunos.push({
+                                id: `a-${Date.now()}-${Math.random()}`,
+                                nome: columns[0].replace(/"/g, '').trim(),
+                                turmaId: APP_STATE.importContextTurmaId,
+                                matricula: columns[1] ? columns[1].replace(/"/g, '').trim() : `MAT-${Math.floor(1000 + Math.random() * 9000)}`,
+                                responsavel: columns[2] ? columns[2].replace(/"/g, '').trim() : 'Não Informado',
+                                telefone: columns[3] ? columns[3].replace(/"/g, '').trim() : 'Não Informado'
+                            });
+                            count++;
+                        }
+                    }
+                    finalizeImport(count);
+                };
+                reader.readAsText(file);
+            } else if (['xlsx', 'xls'].includes(fileExtension)) {
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(sheet);
+                    let count = 0;
+                    rows.forEach(r => {
+                        const nome = r.Nome || r.nome || r.ALUNO || r.Aluno || r.student || r.Student;
+                        if(nome) {
+                            const responsavel = r.Responsavel || r.responsavel || r.Responsável || r.responsável || r.Pai || r.pai || r.Mãe || r.mãe || r["Pai/Responsável"] || "Não Informado";
+                            const telefone = r.Telefone || r.telefone || r.Celular || r.celular || r.Contato || r.contato || r.Tel || r.tel || "Não Informado";
+                            APP_STATE.alunos.push({
+                                id: `a-${Date.now()}-${Math.random()}`,
+                                nome: String(nome).trim(),
+                                turmaId: APP_STATE.importContextTurmaId,
+                                matricula: r.Matricula || r.matricula || r.id || `MAT-${Math.floor(1000+Math.random()*9000)}`,
+                                responsavel: String(responsavel).trim(),
+                                telefone: String(telefone).trim()
+                            });
+                            count++;
+                        }
+                    });
+                    finalizeImport(count);
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                showToast("Formato de arquivo não suportado!", "error");
+            }
+        }
+
+        function finalizeImport(count) {
+            saveToLocalStorage();
+            renderTurmas();
+            updateDropdowns();
+            showToast(`${count} alunos importados com sucesso!`);
+            closeImportModal();
+        }
+
+        // ================= GERENCIAR ALUNOS (E EDIÇÃO INLINE) =================
+        function openManageStudentsModal(turmaId, turmaNome) {
+            APP_STATE.manageContextTurmaId = turmaId;
+            document.getElementById('manageStudentsTurmaName').textContent = turmaNome;
+            document.getElementById('manageStudentsModal').classList.remove('hidden');
+            editingStudentId = null; // Reseta estado de edição
+            renderManageStudentsList();
+        }
+
+        function closeManageStudentsModal() {
+            document.getElementById('manageStudentsModal').classList.add('hidden');
+            APP_STATE.manageContextTurmaId = null;
+            APP_STATE.transferringStudentId = null;
+            editingStudentId = null;
+        }
+
+        function renderManageStudentsList() {
+            const tbody = document.getElementById('manageStudentsTableBody');
+            const emptyState = document.getElementById('emptyStudentsState');
+            tbody.innerHTML = '';
+            const turmaId = APP_STATE.manageContextTurmaId;
+            const alunosFiltrados = APP_STATE.alunos.filter(a => a.turmaId === turmaId);
+            
+            if (alunosFiltrados.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            alunosFiltrados.forEach(aluno => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                
+                const isTransferring = APP_STATE.transferringStudentId === aluno.id;
+                const isEditing = editingStudentId === aluno.id;
+
+                let actionHtml = '';
+
+                if (isEditing) {
+                    // Modo de edição inline do aluno
+                    tr.innerHTML = `
+                        <td class="py-3 text-xs font-mono text-slate-400">
+                            <input type="text" id="edit-student-mat-${aluno.id}" value="${aluno.matricula}" class="w-full px-2 py-1 border border-slate-200 rounded text-xs font-mono focus:border-brandBlue focus:outline-none">
+                        </td>
+                        <td class="py-3">
+                            <input type="text" id="edit-student-nome-${aluno.id}" value="${aluno.nome}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm font-bold mb-1 focus:border-brandBlue focus:outline-none">
+                            <div class="grid grid-cols-2 gap-2 mt-1">
+                                <div class="flex items-center gap-1 border border-slate-200 rounded px-2 py-0.5 bg-white">
+                                    <i class="fa-solid fa-user-tie text-brandPink text-xs"></i>
+                                    <input type="text" id="edit-student-resp-${aluno.id}" value="${aluno.responsavel || ''}" placeholder="Responsável" class="w-full bg-transparent text-xs border-none focus:outline-none">
+                                </div>
+                                <div class="flex items-center gap-1 border border-slate-200 rounded px-2 py-0.5 bg-white">
+                                    <i class="fa-solid fa-phone text-brandBlue text-xs"></i>
+                                    <input type="text" id="edit-student-tel-${aluno.id}" value="${aluno.telefone || ''}" placeholder="Telefone" class="w-full bg-transparent text-xs border-none focus:outline-none">
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 text-right">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <button onclick="saveStudentChanges('${aluno.id}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm" title="Salvar Alterações">
+                                    <i class="fa-solid fa-check"></i> OK
+                                </button>
+                                <button onclick="cancelStudentEdit()" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-lg text-xs font-bold transition-all" title="Cancelar">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                } else if (isTransferring) {
+                    // Modo transferência de turma
+                    let options = '<option value="">-- Escolha a Turma --</option>';
+                    APP_STATE.turmas.filter(t => t.id !== turmaId).forEach(t => {
+                        options += `<option value="${t.id}">${t.nome}</option>`;
+                    });
+                    tr.innerHTML = `
+                        <td class="py-3 text-xs font-mono text-slate-400">${aluno.matricula}</td>
+                        <td class="py-3">
+                            <div class="font-bold text-slate-700">${aluno.nome}</div>
+                        </td>
+                        <td class="py-3 text-right">
+                            <div class="flex items-center justify-end gap-1">
+                                <select id="transfer-select-${aluno.id}" class="px-2 py-1 text-xs border rounded-lg focus:outline-none">
+                                    ${options}
+                                </select>
+                                <button onclick="confirmTransfer('${aluno.id}')" class="px-2 py-1 bg-emerald-600 text-white rounded text-xs font-bold hover:bg-emerald-700">OK</button>
+                                <button onclick="cancelTransfer()" class="px-2 py-1 bg-slate-200 text-slate-600 rounded text-xs font-bold hover:bg-slate-300">X</button>
+                            </div>
+                        </td>
+                    `;
+                } else {
+                    // Modo padrão (Exibição normal dos dados)
+                    actionHtml = `
+                        <button onclick="startStudentEdit('${aluno.id}')" class="px-2 py-1 bg-brandBlue/10 text-brandBlue hover:bg-brandBlue hover:text-white rounded-lg text-xs font-bold transition-all mr-1" title="Editar Informações">
+                            <i class="fa-solid fa-user-pen"></i> Editar
+                        </button>
+                        <button onclick="initiateTransfer('${aluno.id}')" class="px-2 py-1 bg-brandYellow/10 text-brandDarkBlue hover:bg-brandYellow hover:text-white rounded-lg text-xs font-bold transition-all mr-1">
+                            <i class="fa-solid fa-right-left"></i> Transferir
+                        </button>
+                        <button onclick="deleteStudent('${aluno.id}')" class="px-2 py-1 bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg text-xs font-bold transition-all">
+                            <i class="fa-solid fa-user-minus"></i> Excluir
+                        </button>
+                    `;
+                    tr.innerHTML = `
+                        <td class="py-3 text-xs font-mono text-slate-400">${aluno.matricula}</td>
+                        <td class="py-3">
+                            <div class="font-bold text-slate-700">${aluno.nome}</div>
+                            <div class="text-xs text-slate-400 mt-1 flex flex-wrap gap-x-3">
+                                <span><i class="fa-solid fa-user-tie text-brandPink/70 mr-1"></i>Resp: <strong class="text-slate-500">${aluno.responsavel || 'Não Informado'}</strong></span>
+                                <span><i class="fa-solid fa-phone text-brandBlue/70 mr-1"></i>Tel: <strong class="text-slate-500">${aluno.telefone || 'Não Informado'}</strong></span>
+                            </div>
+                        </td>
+                        <td class="py-3 text-right">${actionHtml}</td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Funções para controle de edição inline do Aluno
+        function startStudentEdit(id) {
+            editingStudentId = id;
+            renderManageStudentsList();
+        }
+
+        function cancelStudentEdit() {
+            editingStudentId = null;
+            renderManageStudentsList();
+        }
+
+        function saveStudentChanges(alunoId) {
+            const inputMat = document.getElementById(`edit-student-mat-${alunoId}`);
+            const inputNome = document.getElementById(`edit-student-nome-${alunoId}`);
+            const inputResp = document.getElementById(`edit-student-resp-${alunoId}`);
+            const inputTel = document.getElementById(`edit-student-tel-${alunoId}`);
+
+            if (!inputNome || !inputNome.value.trim()) {
+                showToast("O nome do aluno não pode estar em branco.", "error");
+                return;
+            }
+
+            const alunoIndex = APP_STATE.alunos.findIndex(a => a.id === alunoId);
+            if (alunoIndex !== -1) {
+                APP_STATE.alunos[alunoIndex].matricula = inputMat.value.trim() || `MAT-${Math.floor(1000 + Math.random() * 9000)}`;
+                APP_STATE.alunos[alunoIndex].nome = inputNome.value.trim();
+                APP_STATE.alunos[alunoIndex].responsavel = inputResp.value.trim() || 'Não Informado';
+                APP_STATE.alunos[alunoIndex].telefone = inputTel.value.trim() || 'Não Informado';
+                
+                saveToLocalStorage();
+                editingStudentId = null;
+                renderManageStudentsList();
+                renderTurmas();
+                renderBoletimVisual(); // Atualiza painel de impressão se o aluno estiver em foco
+                showToast("Informações do aluno atualizadas com sucesso!");
+            }
+        }
+
+        function initiateTransfer(alunoId) {
+            APP_STATE.transferringStudentId = alunoId;
+            renderManageStudentsList();
+        }
+
+        function cancelTransfer() {
+            APP_STATE.transferringStudentId = null;
+            renderManageStudentsList();
+        }
+
+        function confirmTransfer(alunoId) {
+            const select = document.getElementById(`transfer-select-${alunoId}`);
+            const targetTurmaId = select.value;
+            if (!targetTurmaId) {
+                showToast("Por favor, selecione uma turma de destino.", "error");
+                return;
+            }
+            const aluno = APP_STATE.alunos.find(a => a.id === alunoId);
+            const targetTurma = APP_STATE.turmas.find(t => t.id === targetTurmaId);
+            if (!aluno || !targetTurma) return;
+            aluno.turmaId = targetTurmaId;
+            saveToLocalStorage();
+            renderManageStudentsList();
+            renderTurmas();
+            updateDropdowns();
+            showToast(`Aluno "${aluno.nome}" transferido com sucesso para a turma "${targetTurma.nome}"!`);
+        }
+
+        function deleteStudent(alunoId) {
+            const aluno = APP_STATE.alunos.find(a => a.id === alunoId);
+            if (!aluno) return;
+            showConfirm(
+                "Remover Aluno?", 
+                `Tem certeza que deseja remover o(a) aluno(a) "${aluno.nome}"?`,
+                () => {
+                    APP_STATE.alunos = APP_STATE.alunos.filter(a => a.id !== alunoId);
+                    delete APP_STATE.notas[alunoId];
+                    delete APP_STATE.comportamento[alunoId];
+                    saveToLocalStorage();
+                    renderManageStudentsList();
+                    renderTurmas();
+                    updateDropdowns();
+                    showToast("Aluno removido com sucesso!", "warning");
+                }
+            );
+        }
+
+        // ================= MANIPULAÇÃO DOS DROPDOWNS =================
+        function updateDropdowns() {
+            ['aula-turma-select', 'freq-turma-select', 'boletim-turma-select'].forEach(id => {
+                const s = document.getElementById(id); 
+                s.innerHTML = '<option value="">-- Turma --</option>';
+                APP_STATE.turmas.forEach(t => { s.innerHTML += `<option value="${t.id}">${t.nome}</option>`; });
+            });
+        }
+
+        // ================= NOVO MÓDULO FREQUÊNCIA COM INTEGRAÇÃO DE AULAS DO DIA =================
+        function loadFrequenciaAlunos() {
+            const tId = document.getElementById('freq-turma-select').value;
+            const d = document.getElementById('freq-data').value;
+            const tbody = document.getElementById('alunosFreqTableBody');
+            const aulasContainer = document.getElementById('freq-aulas-do-dia');
+            
+            tbody.innerHTML = '';
+            aulasContainer.innerHTML = '';
+
+            if(!tId || !d) {
+                aulasContainer.innerHTML = `<span class="text-slate-400 text-xs italic font-medium">Selecione uma turma e data para carregar as disciplinas do dia...</span>`;
+                return;
+            }
+
+            // Carrega e exibe as aulas do dia para a turma correspondente
+            const aulasDoDia = APP_STATE.aulas.filter(a => a.turmaId === tId && a.data === d);
+            if (aulasDoDia.length === 0) {
+                aulasContainer.innerHTML = `
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-full text-xs">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Nenhuma disciplina registrada hoje. Cadastre as aulas na aba "Aulas".
+                    </span>
+                `;
+            } else {
+                aulasDoDia.forEach(aula => {
+                    aulasContainer.innerHTML += `
+                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-brandBlue/10 text-brandBlue border border-brandBlue/20 rounded-full text-xs font-bold shadow-sm">
+                            <i class="fa-solid fa-book-bookmark"></i> ${aula.materia}
+                        </span>
+                    `;
+                });
+            }
+
+            const alunos = APP_STATE.alunos.filter(a => a.turmaId === tId);
+            const freqDia = APP_STATE.frequencia[`${d}_${tId}`] || {};
+
+            alunos.forEach(a => {
+                const isP = freqDia[a.id] !== undefined ? freqDia[a.id] : true;
+                const tr = document.createElement('tr');
+                tr.id = `f-row-${a.id}`;
+                tr.setAttribute('data-p', isP);
+                tr.className = "hover:bg-slate-50 transition-all";
+
+                tr.innerHTML = `
+                    <td class="py-3 text-xs text-slate-400 font-mono">${a.matricula}</td>
+                    <td class="font-bold text-slate-700">${a.nome}</td>
+                    <td class="py-3 text-center flex justify-center items-center">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="chk-${a.id}" onchange="toggleCheckboxAttendance('${a.id}')" class="sr-only peer" ${isP ? 'checked' : ''}>
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                            <span id="lbl-status-${a.id}" class="ml-3 text-xs font-bold min-w-[60px] text-left ${isP ? 'text-emerald-600' : 'text-rose-500'}">
+                                ${isP ? 'Presente' : 'Falta'}
+                            </span>
+                        </label>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Função de manipulação do estado individual de cada switch de presença
+        function toggleCheckboxAttendance(id) {
+            const checkbox = document.getElementById(`chk-${id}`);
+            const label = document.getElementById(`lbl-status-${id}`);
+            const isP = checkbox.checked;
+            
+            document.getElementById(`f-row-${id}`).setAttribute('data-p', isP);
+            if (isP) {
+                label.textContent = "Presente";
+                label.className = "ml-3 text-xs font-bold min-w-[60px] text-left text-emerald-600";
+            } else {
+                label.textContent = "Falta";
+                label.className = "ml-3 text-xs font-bold min-w-[60px] text-left text-rose-500";
+            }
+        }
+
+        function toggleF(id, p) { 
+            const checkbox = document.getElementById(`chk-${id}`);
+            if (checkbox) {
+                checkbox.checked = p;
+                toggleCheckboxAttendance(id);
+            }
+        }
+
+        function saveFrequencia() {
+            const tId = document.getElementById('freq-turma-select').value;
+            const d = document.getElementById('freq-data').value;
+            if(!tId || !d) return;
+            APP_STATE.frequencia[`${d}_${tId}`] = {};
+            APP_STATE.alunos.filter(a => a.turmaId === tId).forEach(a => {
+                const checkbox = document.getElementById(`chk-${a.id}`);
+                const isP = checkbox ? checkbox.checked : true;
+                APP_STATE.frequencia[`${d}_${tId}`][a.id] = isP;
+            });
+            saveToLocalStorage(); 
+            showToast("Frequência gravada e computada com sucesso!");
+        }
+
+        function updateBoletimAlunosDropdown() {
+            const tId = document.getElementById('boletim-turma-select').value;
+            const s = document.getElementById('boletim-aluno-select');
+            s.innerHTML = '<option value="">-- Aluno --</option>';
+            APP_STATE.alunos.filter(a => a.turmaId === tId).forEach(a => { s.innerHTML += `<option value="${a.id}">${a.nome}</option>`; });
+        }
+
+        function syncSelectedAluno() { 
+            const aId = document.getElementById('boletim-aluno-select').value;
+            if (aId) {
+                const comp = APP_STATE.comportamento[aId] || { c1: 3, c2: 3, c3: 3, c4: 3, c5: 3 };
+                BEHAVIOR_CRITERIA.forEach(c => {
+                    const input = document.getElementById(`in-${c.id}`);
+                    if(input) {
+                        input.value = comp[c.id] || 3;
+                        uL(c.id, input.value);
+                    }
+                });
+            }
+            renderBoletimVisual(); 
+        }
+
+        // ================= COMPORTAMENTO POR RUBRICAS =================
+        function renderBehaviorInputs() {
+            const container = document.getElementById('behaviorInputs');
+            container.innerHTML = '';
+            BEHAVIOR_CRITERIA.forEach(c => {
+                container.innerHTML += `
+                <div class="pb-3 border-b border-slate-100">
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                        <span class="text-slate-700">${c.label}</span>
+                        <span id="v-${c.id}" class="text-brandPink">Bom</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mb-2 leading-snug">${c.desc}</p>
+                    <input type="range" id="in-${c.id}" min="1" max="5" value="3" oninput="uL('${c.id}', this.value)" class="w-full accent-brandPink h-1">
+                </div>`;
+            });
+        }
+        function uL(id, v) { document.getElementById(`v-${id}`).textContent = RUBRICS_MAP[v].name; }
+
+        function saveBehavior() {
+            const aId = document.getElementById('boletim-aluno-select').value; if(!aId) return;
+            APP_STATE.comportamento[aId] = {};
+            BEHAVIOR_CRITERIA.forEach(c => { APP_STATE.comportamento[aId][c.id] = document.getElementById(`in-${c.id}`).value; });
+            saveToLocalStorage(); 
+            renderBoletimVisual(); 
+            showToast("Avaliação de atitudes registrada!");
+        }
+
+        function saveGrade(e) {
+            e.preventDefault(); 
+            const aId = document.getElementById('boletim-aluno-select').value; if(!aId) return;
+            const m = document.getElementById('nota-materia').value;
+            if(!APP_STATE.notas[aId]) APP_STATE.notas[aId] = {};
+            APP_STATE.notas[aId][m] = { b1: document.getElementById('nota-b1').value, b2: document.getElementById('nota-b2').value };
+            saveToLocalStorage(); 
+            renderBoletimVisual();
+            showToast("Nota atribuída!");
+            document.getElementById('nota-b1').value = '';
+            document.getElementById('nota-b2').value = '';
+        }
+
+        // ================= CÁLCULO DE FALTA POR DISCIPLINA & BOLETIM VISUAL =================
+        function calculateAbsencePercentagePerSubject(alunoId, turmaId, materia) {
+            const aulasDaMateria = APP_STATE.aulas.filter(a => a.turmaId === turmaId && a.materia === materia);
+            if (aulasDaMateria.length === 0) return { faltas: 0, porcentagem: 0, totalAulas: 0 };
+
+            let totalDiasComAula = 0;
+            let faltas = 0;
+
+            aulasDaMateria.forEach(aula => {
+                const chaveFreq = `${aula.data}_${turmaId}`;
+                const freqDia = APP_STATE.frequencia[chaveFreq];
+
+                if (freqDia) {
+                    totalDiasComAula++;
+                    const isPresent = freqDia[alunoId] !== false; 
+                    if (!isPresent) {
+                        faltas++;
+                    }
+                }
+            });
+
+            const porcentagem = totalDiasComAula > 0 ? Math.round((faltas / totalDiasComAula) * 100) : 0;
+            return {
+                faltas: faltas,
+                porcentagem: porcentagem,
+                totalAulas: totalDiasComAula
+            };
+        }
+
+        function renderBoletimVisual() {
+            const aId = document.getElementById('boletim-aluno-select').value;
+            const body = document.getElementById('bol-table-body');
+            const behav = document.getElementById('bol-behavior-summary');
+            body.innerHTML = ''; behav.innerHTML = '';
+            if(!aId) {
+                document.getElementById('bol-print-nome').textContent = "-";
+                document.getElementById('bol-print-turma').textContent = "-";
+                document.getElementById('bol-print-responsavel').textContent = "-";
+                document.getElementById('bol-print-telefone').textContent = "-";
+                return;
+            }
+            const alu = APP_STATE.alunos.find(a => a.id === aId);
+            if(!alu) return;
+            const tur = APP_STATE.turmas.find(t => t.id === alu.turmaId);
+            document.getElementById('bol-print-nome').textContent = alu.nome;
+            document.getElementById('bol-print-turma').textContent = tur ? tur.nome : 'Sem Turma';
+            document.getElementById('bol-print-responsavel').textContent = alu.responsavel || "Não Informado";
+            document.getElementById('bol-print-telefone').textContent = alu.telefone || "Não Informado";
+
+            const mats = ['Matemática', 'Português', 'História', 'Geografia', 'Ciências', 'Artes'];
+            mats.forEach(m => {
+                const n = APP_STATE.notas[aId]?.[m] || {b1:'-', b2:'-'};
+                const med = (n.b1 !== '-' && n.b2 !== '-') ? ((parseFloat(n.b1)+parseFloat(n.b2))/2).toFixed(1) : '-';
+                
+                const dadosFrequencia = calculateAbsencePercentagePerSubject(aId, alu.turmaId, m);
+                let freqDisplay = '-';
+                if (dadosFrequencia.totalAulas > 0) {
+                    freqDisplay = `<span class="font-bold ${dadosFrequencia.porcentagem > 25 ? 'text-rose-600' : 'text-slate-500'}">
+                        ${dadosFrequencia.porcentagem}% <span class="text-xs font-normal">(${dadosFrequencia.faltas}f / ${dadosFrequencia.totalAulas}a)</span>
+                    </span>`;
+                } else {
+                    freqDisplay = `<span class="text-slate-400 italic text-xs">Sem aulas</span>`;
+                }
+
+                body.innerHTML += `
+                    <tr>
+                        <td class="p-2 border font-medium text-slate-700">${m}</td>
+                        <td class="p-2 border text-center font-semibold">${n.b1}</td>
+                        <td class="p-2 border text-center font-semibold">${n.b2}</td>
+                        <td class="p-2 border text-center font-bold text-brandBlue">${med}</td>
+                        <td class="p-2 border text-center">${freqDisplay}</td>
+                    </tr>
+                `;
+            });
+
+            // Rubricas e Comportamento
+            const comp = APP_STATE.comportamento[aId] || {};
+            BEHAVIOR_CRITERIA.forEach(c => {
+                const v = comp[c.id] || 3; 
+                const rd = RUBRICS_MAP[v];
+                behav.innerHTML += `
+                <div class="p-3 border rounded-xl bg-white shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start gap-2 text-xs font-bold mb-1">
+                            <span class="text-slate-800">${c.label}</span>
+                            <span class="${rd.color} px-2.5 py-0.5 rounded-full text-[10px] font-semibold border shrink-0">${rd.name}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 leading-tight mb-3">${c.desc}</p>
+                    </div>
+                    <div>
+                        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                            <div class="${rd.bar} h-1.5 rounded-full" style="width:${v*20}%"></div>
+                        </div>
+                        <div class="flex justify-between text-[8px] text-slate-400 mt-1">
+                            <span>Mínimo</span>
+                            <span>Excelente</span>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        // ================= CADASTRO E EDIÇÃO DE AULAS =================
+        function saveAula(e) {
+            e.preventDefault();
+            const turmaId = document.getElementById('aula-turma-select').value;
+            const materia = document.getElementById('aula-materia').value;
+            const data = document.getElementById('aula-data').value;
+            const conteudo = document.getElementById('aula-conteudo').value;
+
+            if (editContextAulaId) {
+                // Modo Edição
+                const index = APP_STATE.aulas.findIndex(a => a.id === editContextAulaId || a.id == editContextAulaId);
+                if (index !== -1) {
+                    APP_STATE.aulas[index].turmaId = turmaId;
+                    APP_STATE.aulas[index].materia = materia;
+                    APP_STATE.aulas[index].data = data;
+                    APP_STATE.aulas[index].conteudo = conteudo;
+                    showToast("Aula atualizada com sucesso!");
+                }
+                resetAulaForm();
+            } else {
+                // Modo Criação
+                const aula = {
+                    id: Date.now(),
+                    turmaId: turmaId,
+                    materia: materia,
+                    data: data,
+                    conteudo: conteudo
+                };
+                APP_STATE.aulas.push(aula);
+                showToast("Aula cadastrada com sucesso!");
+                e.target.reset();
+                document.getElementById('aula-data').value = new Date().toISOString().split('T')[0];
+            }
+            saveToLocalStorage();
+            renderAulas();
+        }
+
+        function editAula(id) {
+            const aula = APP_STATE.aulas.find(a => a.id === id || a.id == id);
+            if (!aula) return;
+            
+            editContextAulaId = id;
+            document.getElementById('aula-turma-select').value = aula.turmaId;
+            document.getElementById('aula-materia').value = aula.materia;
+            document.getElementById('aula-data').value = aula.data;
+            document.getElementById('aula-conteudo').value = aula.conteudo;
+
+            const form = document.getElementById('aulaForm');
+            document.getElementById('aula-form-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-brandPink mr-2"></i>Editar Aula`;
+            
+            let submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.textContent = "Atualizar Aula";
+            submitBtn.className = "w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-all shadow-md";
+
+            // Adiciona botão cancelar edição caso não exista
+            let cancelBtn = document.getElementById('cancel-edit-aula-btn');
+            if (!cancelBtn) {
+                cancelBtn = document.createElement('button');
+                cancelBtn.type = "button";
+                cancelBtn.id = "cancel-edit-aula-btn";
+                cancelBtn.className = "w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition-all text-sm mt-2";
+                cancelBtn.textContent = "Cancelar Edição";
+                cancelBtn.onclick = resetAulaForm;
+                form.appendChild(cancelBtn);
+            }
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetAulaForm() {
+            editContextAulaId = null;
+            const form = document.getElementById('aulaForm');
+            form.reset();
+            document.getElementById('aula-data').value = new Date().toISOString().split('T')[0];
+            document.getElementById('aula-form-title').innerHTML = `<i class="fa-solid fa-chalkboard-user text-brandPink mr-2"></i>Registrar Aula`;
+
+            let submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.textContent = "Salvar Aula";
+            submitBtn.className = "w-full py-3 bg-brandBlue text-white font-bold rounded-lg hover:bg-blue-700 transition-all";
+
+            const cancelBtn = document.getElementById('cancel-edit-aula-btn');
+            if (cancelBtn) cancelBtn.remove();
+        }
+
+        function renderAulas() {
+            const b = document.getElementById('aulasTableBody'); 
+            const emptyState = document.getElementById('emptyAulasState');
+            b.innerHTML = '';
+            
+            if (APP_STATE.aulas.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            APP_STATE.aulas.slice().reverse().forEach(a => {
+                const t = APP_STATE.turmas.find(x => x.id === a.turmaId);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2 text-xs text-slate-500">${a.data.split('-').reverse().join('/')}</td>
+                    <td class="font-bold text-sm">${t ? t.nome : '-'}</td>
+                    <td class="text-sm">${a.materia}</td>
+                    <td class="text-xs italic text-slate-500">${a.conteudo}</td>
+                    <td class="py-2 text-right">
+                        <button onclick="editAula('${a.id}')" class="px-2 py-1 bg-brandBlue/10 hover:bg-brandBlue hover:text-white text-brandBlue transition-all rounded-lg text-xs font-bold">
+                            <i class="fa-solid fa-pen-to-square"></i> Editar
+                        </button>
+                    </td>
+                `;
+                b.appendChild(tr);
+            });
+        }
+
+        function setAllAttendance(isPresent) {
+            const rows = document.querySelectorAll('#alunosFreqTableBody tr');
+            rows.forEach(row => {
+                const studentId = row.id.replace('f-row-', '');
+                toggleF(studentId, isPresent);
+            });
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
+        }
+    </script>
+</body>
+</html>
