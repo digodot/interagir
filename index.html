@@ -28,7 +28,6 @@
         }
     </script>
     <style>
-        /* Estilização para Scroll das Abas no Mobile */
         .nav-scroll::-webkit-scrollbar {
             display: none;
         }
@@ -37,7 +36,7 @@
             scrollbar-width: none;
         }
 
-        /* Gradiente inspirado na borda externa da logo da Escola Interagir */
+        /* Gradiente inspirado na logo da Escola Interagir na imagem image_e14461.png */
         .brand-gradient-border {
             background: linear-gradient(135deg, #F4B41A, #D91A9C, #1560CD);
         }
@@ -47,7 +46,6 @@
             background: rgba(255,255,255,0.1);
         }
         
-        /* Ajuste fino para inputs range em telas menores */
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -60,14 +58,12 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        /* Melhoria de legibilidade de tabelas no mobile */
         .table-container {
             width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Otimização de Impressão */
         @media print {
             body * {
                 visibility: hidden;
@@ -148,6 +144,10 @@
                 <button onclick="switchTab('boletins')" id="tab-boletins" class="whitespace-nowrap px-4 py-3 text-sm font-bold transition-all border-b-4 border-transparent">
                     <i class="fa-solid fa-file-invoice mr-2"></i>Boletins
                 </button>
+                <!-- NOVA ABA: ÁREA DOS PAIS -->
+                <button onclick="switchTab('pais')" id="tab-pais" class="whitespace-nowrap px-4 py-3 text-sm font-bold transition-all border-b-4 border-transparent text-brandYellow">
+                    <i class="fa-solid fa-user-shield mr-2"></i>Área dos Pais
+                </button>
             </nav>
         </div>
         <div class="h-1 bg-brandPink"></div>
@@ -156,7 +156,7 @@
     <!-- CONTEÚDO PRINCIPAL -->
     <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 no-print">
 
-        <!-- CONTEÚDO: TURMAS (Criação Manual e Acesso aos Alunos) -->
+        <!-- ================= TURMAS (Criação Manual e Acesso aos Alunos) ================= -->
         <section id="sec-turmas" class="tab-content animate-fade-in">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
@@ -221,7 +221,7 @@
             </div>
         </section>
 
-        <!-- CONTEÚDO: FREQUÊNCIA DO DIA (Aulas do dia & Checkbox Premium) -->
+        <!-- ================= FREQUÊNCIA DO DIA (Aulas do dia) ================= -->
         <section id="sec-frequencia" class="tab-content hidden">
             <div class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border-t-4 border-brandBlue">
                 <div class="flex flex-col gap-4 mb-4 pb-4 border-b">
@@ -267,7 +267,7 @@
             </div>
         </section>
 
-        <!-- CONTEÚDO: CADASTRAMENTO E EDIÇÃO DE AULAS -->
+        <!-- ================= CADASTRAMENTO E EDIÇÃO DE AULAS ================= -->
         <section id="sec-aulas" class="tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
@@ -329,7 +329,7 @@
             </div>
         </section>
 
-        <!-- CONTEÚDO: BOLETIM (Impressão, Faltas por Disciplina e Rubricas Detalhadas) -->
+        <!-- ================= BOLETIM (Notas e Rubricas Detalhadas) ================= -->
         <section id="sec-boletins" class="tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
@@ -362,7 +362,9 @@
 
                     <!-- Lançar Avaliação Socioemocional (Sliders) -->
                     <div class="bg-white rounded-2xl p-5 shadow-sm border-t-4 border-brandBlue">
-                        <h2 class="text-sm font-bold text-slate-400 uppercase mb-3 tracking-wider">Comportamento (Rubricas)</h2>
+                        <h2 class="text-sm font-bold text-slate-400 uppercase mb-1 tracking-wider">Comportamento (Rubricas)</h2>
+                        <p class="text-[10px] text-slate-500 mb-4">Escolha o nível de cada competência de acordo com as diretrizes pedagógicas.</p>
+                        
                         <div class="space-y-4">
                             <!-- Participação -->
                             <div>
@@ -370,6 +372,7 @@
                                     <span class="text-xs font-bold text-slate-700">1. Participação</span>
                                     <span id="lbl-c1" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-brandBlue">Bom</span>
                                 </div>
+                                <p class="text-[10px] text-slate-400 leading-tight mb-2">Demonstra interesse pelas aulas, faz perguntas, contribui com ideias e participa das discussões propostas.</p>
                                 <input type="range" id="input-c1" min="1" max="5" value="3" oninput="updateSliderLabel('c1', this.value)" class="w-full accent-brandPink h-1.5 bg-slate-200 rounded-lg appearance-none">
                             </div>
                             <!-- Relacionamento -->
@@ -378,6 +381,7 @@
                                     <span class="text-xs font-bold text-slate-700">2. Relacionamento</span>
                                     <span id="lbl-c2" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-brandBlue">Bom</span>
                                 </div>
+                                <p class="text-[10px] text-slate-400 leading-tight mb-2">Interage de forma respeitosa com colegas e professores, coopera em trabalhos em grupo e contribui para um ambiente harmonioso.</p>
                                 <input type="range" id="input-c2" min="1" max="5" value="3" oninput="updateSliderLabel('c2', this.value)" class="w-full accent-brandPink h-1.5 bg-slate-200 rounded-lg appearance-none">
                             </div>
                             <!-- Compromisso -->
@@ -386,6 +390,7 @@
                                     <span class="text-xs font-bold text-slate-700">3. Compromisso</span>
                                     <span id="lbl-c3" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-brandBlue">Bom</span>
                                 </div>
+                                <p class="text-[10px] text-slate-400 leading-tight mb-2">Cumpre prazos, traz os materiais necessários, realiza as atividades propostas e demonstra organização.</p>
                                 <input type="range" id="input-c3" min="1" max="5" value="3" oninput="updateSliderLabel('c3', this.value)" class="w-full accent-brandPink h-1.5 bg-slate-200 rounded-lg appearance-none">
                             </div>
                             <!-- Atenção -->
@@ -394,6 +399,7 @@
                                     <span class="text-xs font-bold text-slate-700">4. Atenção</span>
                                     <span id="lbl-c4" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-brandBlue">Bom</span>
                                 </div>
+                                <p class="text-[10px] text-slate-400 leading-tight mb-2">Mantém o foco durante as explicações e atividades, seguindo orientações e evitando distrações frequentes.</p>
                                 <input type="range" id="input-c4" min="1" max="5" value="3" oninput="updateSliderLabel('c4', this.value)" class="w-full accent-brandPink h-1.5 bg-slate-200 rounded-lg appearance-none">
                             </div>
                             <!-- Autonomia -->
@@ -402,6 +408,7 @@
                                     <span class="text-xs font-bold text-slate-700">5. Autonomia</span>
                                     <span id="lbl-c5" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-brandBlue">Bom</span>
                                 </div>
+                                <p class="text-[10px] text-slate-400 leading-tight mb-2">Busca soluções para problemas, realiza tarefas com independência e demonstra disposição para aprender além do solicitado.</p>
                                 <input type="range" id="input-c5" min="1" max="5" value="3" oninput="updateSliderLabel('c5', this.value)" class="w-full accent-brandPink h-1.5 bg-slate-200 rounded-lg appearance-none">
                             </div>
 
@@ -432,7 +439,7 @@
                         </div>
 
                         <!-- Info do Aluno -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl mb-4 text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 bg-slate-50 p-4 rounded-xl mb-4 text-xs">
                             <div>
                                 <span class="text-[10px] uppercase font-bold text-slate-400">Aluno</span>
                                 <span id="bol-print-nome" class="block text-brandBlue text-sm font-bold">-</span>
@@ -440,6 +447,10 @@
                             <div>
                                 <span class="text-[10px] uppercase font-bold text-slate-400">Turma</span>
                                 <span id="bol-print-turma" class="block text-brandBlue text-sm font-bold">-</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-slate-400">Ano Letivo</span>
+                                <span id="bol-print-ano" class="block text-brandBlue text-sm font-bold">-</span>
                             </div>
                             <div>
                                 <span class="text-[10px] uppercase font-bold text-slate-400">Responsável</span>
@@ -482,6 +493,187 @@
 
             </div>
         </section>
+
+        <!-- ================= NOVA ABA: ÁREA DOS PAIS ================= -->
+        <section id="sec-pais" class="tab-content hidden animate-fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Coluna da Esquerda: Acesso do Estudante & Comunicados -->
+                <div class="space-y-6">
+                    
+                    <!-- Acesso Familiar -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border-t-4 border-brandYellow">
+                        <div class="flex items-center gap-3 mb-3">
+                            <span class="w-10 h-10 bg-brandYellow/10 text-brandYellow rounded-xl flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-user-lock"></i>
+                            </span>
+                            <div>
+                                <h2 class="text-base font-black text-brandDarkBlue leading-none">Portal da Família</h2>
+                                <p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Acompanhamento Escolar</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-4">Selecione seu filho para consultar o boletim, notas, faltas e comportamento em tempo real.</p>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Turma do Aluno</label>
+                                <select id="pais-turma-select" onchange="updatePaisAlunosDropdown()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm"></select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Nome do Aluno</label>
+                                <select id="pais-aluno-select" onchange="loadPaisDashboard()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none text-sm">
+                                    <option value="">-- Escolha o Estudante --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mural de Informativos -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border-t-4 border-brandPink">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-bullhorn text-brandPink"></i> Mural de Avisos
+                        </h3>
+                        <div id="pais-mural-container" class="space-y-4">
+                            <!-- Injetado dinamicamente -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Coluna do Meio/Direita: Painel de Informações do Estudante Selecionado -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <div id="pais-boletim-card" class="bg-white p-4 sm:p-8 rounded-2xl shadow-sm border border-slate-200 hidden">
+                        
+                        <!-- Mini Cabeçalho da Área dos Pais -->
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-brandPink text-lg"><i class="fa-solid fa-child-reaching"></i></span>
+                                <h3 class="font-bold text-brandDarkBlue text-base" id="pais-view-nome">Boletim Escolar</h3>
+                            </div>
+                            <span class="text-xs font-bold text-slate-400" id="pais-view-turma">-</span>
+                        </div>
+
+                        <!-- Frequência & Aproveitamento -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-center">
+                                <span class="text-[10px] text-emerald-600 uppercase font-bold tracking-widest block mb-1">Frequência Geral</span>
+                                <span id="pais-stat-freq" class="text-2xl font-black text-emerald-700">-</span>
+                            </div>
+                            <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl text-center">
+                                <span class="text-[10px] text-brandBlue uppercase font-bold tracking-widest block mb-1">Média Parcial</span>
+                                <span id="pais-stat-media" class="text-2xl font-black text-brandBlue">-</span>
+                            </div>
+                            <div class="bg-pink-50 border border-pink-100 p-4 rounded-xl text-center">
+                                <span class="text-[10px] text-brandPink uppercase font-bold tracking-widest block mb-1">Aulas Assistidas</span>
+                                <span id="pais-stat-aulas" class="text-2xl font-black text-brandPink">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Tabela de Rendimento (Notas e Faltas) -->
+                        <div class="table-container mb-6">
+                            <table class="w-full text-sm border-collapse border border-slate-200">
+                                <thead class="bg-brandBlue text-white text-[10px] uppercase">
+                                    <tr>
+                                        <th class="p-2 border">Matéria</th>
+                                        <th class="p-2 border text-center">B1</th>
+                                        <th class="p-2 border text-center">B2</th>
+                                        <th class="p-2 border text-center">Média</th>
+                                        <th class="p-2 border text-center">Faltas (%)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pais-table-body" class="font-medium text-xs">
+                                    <!-- Injetado dinamicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Quadro Socioemocional -->
+                        <div class="border-t pt-6">
+                            <h4 class="text-xs font-bold text-brandBlue mb-4 uppercase tracking-widest">Avaliação Socioemocional (Atitudes)</h4>
+                            <div id="pais-behavior-summary" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- Injetado dinamicamente -->
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Estado Vazio quando nenhum aluno é selecionado -->
+                    <div id="pais-empty-card" class="bg-white p-12 rounded-2xl text-center border shadow-sm">
+                        <div class="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-700">Selecione o Aluno no Painel Lateral</h3>
+                        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">Após escolher a turma e o nome de seu filho, o boletim acadêmico completo e as avaliações comportamentais serão detalhados aqui.</p>
+                    </div>
+
+                    <!-- Contato da Escola -->
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border-t-4 border-brandBlue">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <!-- Informações de Contato -->
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <i class="fa-solid fa-address-book text-brandBlue"></i> Fale com a Escola
+                                </h3>
+                                <p class="text-xs text-slate-500 mb-4">Estamos sempre abertos para ouvir as famílias. Entre em contato conosco pelos canais de atendimento ou envie uma mensagem direta.</p>
+                                
+                                <div class="space-y-3 text-xs">
+                                    <div class="flex items-center gap-3">
+                                        <span class="w-8 h-8 rounded-lg bg-blue-50 text-brandBlue flex items-center justify-center text-sm"><i class="fa-solid fa-phone"></i></span>
+                                        <div>
+                                            <span class="text-[10px] text-slate-400 uppercase block leading-none">Telefone Fixo</span>
+                                            <strong class="text-slate-700">(81) 3456-7890</strong>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm"><i class="fa-brands fa-whatsapp"></i></span>
+                                        <div>
+                                            <span class="text-[10px] text-slate-400 uppercase block leading-none">WhatsApp Secretaria</span>
+                                            <strong class="text-slate-700">(81) 99876-5432</strong>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="w-8 h-8 rounded-lg bg-pink-50 text-brandPink flex items-center justify-center text-sm"><i class="fa-solid fa-envelope"></i></span>
+                                        <div>
+                                            <span class="text-[10px] text-slate-400 uppercase block leading-none">E-mail de Suporte</span>
+                                            <strong class="text-slate-700">contato@escolainteragir.com.br</strong>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="w-8 h-8 rounded-lg bg-yellow-50 text-brandYellow flex items-center justify-center text-sm"><i class="fa-solid fa-location-dot"></i></span>
+                                        <div>
+                                            <span class="text-[10px] text-slate-400 uppercase block leading-none">Endereço Unidade</span>
+                                            <strong class="text-slate-700 text-[11px]">Av. Rui Barbosa, 1234 - Graças, Recife - PE</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Enviar Mensagem Rápida -->
+                            <div class="bg-slate-50 p-4 rounded-xl border">
+                                <h4 class="text-xs font-bold text-slate-700 mb-2">Mensagem para a Coordenação</h4>
+                                <form onsubmit="sendMessageToCoord(event)" class="space-y-3">
+                                    <div>
+                                        <input type="text" id="parent-msg-name" placeholder="Seu Nome Completo" required class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-xs outline-none">
+                                    </div>
+                                    <div>
+                                        <textarea id="parent-msg-text" rows="3" placeholder="Sua mensagem ou dúvida para a equipe pedagógica..." required class="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-xs outline-none"></textarea>
+                                    </div>
+                                    <button type="submit" class="w-full py-2.5 bg-brandBlue hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm">
+                                        <i class="fa-solid fa-paper-plane"></i> Enviar Mensagem
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
     </main>
 
     <!-- MODAL: GERENCIAR ALUNOS E IMPORTAÇÃO EXCEL -->
@@ -584,7 +776,12 @@
             aulas: JSON.parse(localStorage.getItem('escola_aulas')) || [],
             frequencia: JSON.parse(localStorage.getItem('escola_frequencia')) || {},
             notas: JSON.parse(localStorage.getItem('escola_notas')) || {},
-            comportamento: JSON.parse(localStorage.getItem('escola_comportamento')) || {}
+            comportamento: JSON.parse(localStorage.getItem('escola_comportamento')) || {},
+            informativos: JSON.parse(localStorage.getItem('escola_informativos')) || [
+                { id: 1, tag: "Importante", title: "📅 Reunião de Pais e Mestres", desc: "Acontecerá na próxima quinta-feira, às 19h, na unidade escolar. Contamos com a valiosa participação de todos os responsáveis para alinhamento pedagógico do bimestre.", date: "25/06/2026", color: "bg-rose-50 text-rose-700 border-rose-200" },
+                { id: 2, tag: "Evento", title: "🎉 Festa da Família Interagir", desc: "Preparamos um sábado letivo especial com apresentações artísticas de nossos alunos, brincadeiras integradas e piquenique coletivo no pátio. Traga sua energia!", date: "12/07/2026", color: "bg-purple-50 text-purple-700 border-purple-200" },
+                { id: 3, tag: "Recesso", title: "🚧 Férias Escolares de Julho", desc: "Informamos que as aulas da Escola Interagir entrarão em recesso a partir do dia 15 de julho, retornando com força total e atividades inovadoras em 03 de agosto.", date: "15/07/2026", color: "bg-blue-50 text-brandBlue border-blue-200" }
+            ]
         };
 
         // Descrição Detalhada das Rubricas Socioemocionais (para os Pais)
@@ -627,14 +824,14 @@
         // INICIALIZAÇÃO
         document.addEventListener('DOMContentLoaded', () => {
             const hoje = new Date().toISOString().split('T')[0];
-            document.getElementById('aula-data').value = hoje;
-            document.getElementById('freq-data').value = hoje;
+            if (document.getElementById('aula-data')) document.getElementById('aula-data').value = hoje;
+            if (document.getElementById('freq-data')) document.getElementById('freq-data').value = hoje;
 
             renderTurmas();
             renderAulas();
+            renderMuralInformativos();
             updateDropdowns();
 
-            // Setar labels de inicialização dos sliders
             for (let i = 1; i <= 5; i++) {
                 updateSliderLabel(`c${i}`, 3);
             }
@@ -645,7 +842,6 @@
             const t = APP_STATE.turmas.find(x => x.id === turmaId);
             if (!t) return [];
             if (!t.disciplinas || t.disciplinas.length === 0) {
-                // Popula disciplinas padrão caso esteja vazio
                 t.disciplinas = [
                     { id: `d-${t.id}-1`, nome: 'Matemática' },
                     { id: `d-${t.id}-2`, nome: 'Português' },
@@ -671,16 +867,17 @@
         // TOASTS PERSONALIZADOS
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
+            if (!container) return;
             const toast = document.createElement('div');
-            toast.className = `flex items-center gap-3 p-4 rounded-xl shadow-lg border text-sm font-medium transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+            toast.className = `flex items-center gap-3 p-4 rounded-xl shadow-lg border text-sm font-medium transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto bg-white`;
             if (type === 'success') {
-                toast.className += ' bg-emerald-50 border-emerald-200 text-emerald-800';
+                toast.className += ' border-emerald-200 text-emerald-800';
                 toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i><span>${message}</span>`;
             } else if (type === 'error') {
-                toast.className += ' bg-rose-50 border-rose-200 text-rose-800';
+                toast.className += ' border-rose-200 text-rose-800';
                 toast.innerHTML = `<i class="fa-solid fa-circle-exclamation text-rose-600"></i><span>${message}</span>`;
             } else {
-                toast.className += ' bg-amber-50 border-amber-200 text-amber-800';
+                toast.className += ' border-amber-200 text-amber-800';
                 toast.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-600"></i><span>${message}</span>`;
             }
             container.appendChild(toast);
@@ -719,7 +916,7 @@
         }
 
         function updateDropdowns() {
-            const dropdowns = ['aula-turma-select', 'freq-turma-select', 'boletim-turma-select'];
+            const dropdowns = ['aula-turma-select', 'freq-turma-select', 'boletim-turma-select', 'pais-turma-select'];
             dropdowns.forEach(id => {
                 const select = document.getElementById(id);
                 if (!select) return;
@@ -745,7 +942,6 @@
                 turno: document.getElementById('t-turno').value,
                 segmento: document.getElementById('t-segmento').value
             };
-            // Inicializar com disciplinas padrão
             nova.disciplinas = [
                 { id: `d-${nova.id}-1`, nome: 'Matemática' },
                 { id: `d-${nova.id}-2`, nome: 'Português' },
@@ -779,6 +975,7 @@
 
         function renderTurmas() {
             const tbody = document.getElementById('turmasTableBody');
+            if (!tbody) return;
             tbody.innerHTML = '';
             APP_STATE.turmas.forEach(t => {
                 const count = APP_STATE.alunos.filter(a => a.turmaId === t.id).length;
@@ -838,7 +1035,6 @@
                 tr.className = 'hover:bg-slate-50 transition-all text-xs border-b';
 
                 if (editingDisciplineId === disc.id) {
-                    // Modo Edição Inline da Disciplina
                     tr.innerHTML = `
                         <td class="py-2">
                             <input type="text" id="edit-discipline-nome" value="${disc.nome}" class="w-full p-1.5 border rounded text-xs font-bold outline-none">
@@ -851,7 +1047,6 @@
                         </td>
                     `;
                 } else {
-                    // Modo Leitura da Disciplina
                     tr.innerHTML = `
                         <td class="py-3 font-semibold text-slate-800">${disc.nome}</td>
                         <td class="py-3 text-right">
@@ -880,7 +1075,6 @@
             if (t) {
                 if (!t.disciplinas) t.disciplinas = [];
                 
-                // Evitar duplicidade
                 if (t.disciplinas.some(d => d.nome.toLowerCase() === nome.toLowerCase())) {
                     showToast("Esta disciplina já está cadastrada nesta turma.", "error");
                     return;
@@ -964,7 +1158,6 @@
             const tbody = document.getElementById('manageStudentsTableBody');
             tbody.innerHTML = '';
 
-            // Opção de Linha de Criação Manual Rápida no topo do modal
             const trAdd = document.createElement('tr');
             trAdd.className = 'bg-slate-50 border-b-2 border-slate-100';
             trAdd.innerHTML = `
@@ -990,7 +1183,6 @@
                 tr.className = 'hover:bg-slate-50 transition-all text-xs border-b';
 
                 if (editingStudentId === aluno.id) {
-                    // MODO EDIÇÃO INLINE DO ALUNO
                     tr.innerHTML = `
                         <td class="py-2" colspan="2">
                             <div class="grid grid-cols-1 sm:grid-cols-4 gap-1">
@@ -1008,8 +1200,6 @@
                         </td>
                     `;
                 } else {
-                    // MODO DE LEITURA
-                    // Montar opções de transferência para outras turmas
                     let transferOptions = `<option value="">Transferir para...</option>`;
                     APP_STATE.turmas.filter(x => x.id !== turmaId).forEach(tur => {
                         transferOptions += `<option value="${tur.id}">${tur.nome}</option>`;
@@ -1041,7 +1231,6 @@
             });
         }
 
-        // Aluno Manual
         function addStudentManual(turmaId) {
             const nomeInput = document.getElementById('manual-student-nome');
             const matInput = document.getElementById('manual-student-mat');
@@ -1068,7 +1257,6 @@
             showToast("Aluno cadastrado com sucesso!");
         }
 
-        // Processador de Planilhas de Alunos (Excel / CSV)
         function processStudentsFile(file) {
             if (!file) return;
             const currentTurmaId = document.getElementById('manageStudentsModal').dataset.turmaId;
@@ -1086,8 +1274,8 @@
                     
                     const iNome = headers.findIndex(h => h.includes('nome') || h.includes('aluno'));
                     const iMat = headers.findIndex(h => h.includes('matr') || h.includes('cod') || h.includes('id'));
-                    const iResp = headers.findIndex(h => h.includes('resp') || h.includes('pai') || h.includes('mae'));
-                    const iTel = headers.findIndex(h => h.includes('tel') || h.includes('cel') || h.includes('cont'));
+                    const iResp = headers.findIndex(h => h.includes('resp') || h.includes('pai') || h.includes('mae') || h.includes('responsavel'));
+                    const iTel = headers.findIndex(h => h.includes('tel') || h.includes('cel') || h.includes('cont') || h.includes('telefone'));
 
                     for (let i = 1; i < lines.length; i++) {
                         if (!lines[i].trim()) continue;
@@ -1101,7 +1289,6 @@
                         parsedList.push({ id: `a-${Date.now()}-${Math.random().toString(36).substr(2,4)}`, nome, matricula, responsavel, telefone, turmaId: currentTurmaId });
                     }
                 } else {
-                    // Excel
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
                     const firstSheet = workbook.SheetNames[0];
@@ -1110,8 +1297,8 @@
                     rows.forEach(row => {
                         let kNome = Object.keys(row).find(k => k.toLowerCase().includes('nome') || k.toLowerCase().includes('aluno'));
                         let kMat = Object.keys(row).find(k => k.toLowerCase().includes('matr') || k.toLowerCase().includes('cod') || k.toLowerCase().includes('id'));
-                        let kResp = Object.keys(row).find(k => k.toLowerCase().includes('resp') || k.toLowerCase().includes('pai') || k.toLowerCase().includes('mae'));
-                        let kTel = Object.keys(row).find(k => k.toLowerCase().includes('tel') || k.toLowerCase().includes('cel') || k.toLowerCase().includes('cont'));
+                        let kResp = Object.keys(row).find(k => k.toLowerCase().includes('resp') || k.toLowerCase().includes('pai') || k.toLowerCase().includes('mae') || k.toLowerCase().includes('responsavel'));
+                        let kTel = Object.keys(row).find(k => k.toLowerCase().includes('tel') || k.toLowerCase().includes('cel') || k.toLowerCase().includes('cont') || k.toLowerCase().includes('telefone'));
 
                         const nome = kNome ? row[kNome] : '';
                         if (!nome) return;
@@ -1140,7 +1327,6 @@
             }
         }
 
-        // Editar Aluno
         function startStudentEdit(id, turmaId) {
             editingStudentId = id;
             renderManageStudentsTable(turmaId);
@@ -1165,7 +1351,6 @@
             renderManageStudentsTable(turmaId);
         }
 
-        // Transferir Aluno
         function transferStudent(alunoId, destTurmaId, srcTurmaId) {
             if (!destTurmaId) return;
             const al = APP_STATE.alunos.find(x => x.id === alunoId);
@@ -1183,7 +1368,6 @@
             );
         }
 
-        // Remover Aluno
         function deleteStudent(id, turmaId) {
             const al = APP_STATE.alunos.find(x => x.id === id);
             showConfirm(
@@ -1197,7 +1381,6 @@
                 }
             );
         }
-
 
         // ================= GESTÃO DE AULAS =================
         function updateAulaMateriaDropdown() {
@@ -1217,14 +1400,12 @@
 
         function saveAula(e) {
             e.preventDefault();
-            const form = document.getElementById('aulaForm');
             const turmaId = document.getElementById('aula-turma-select').value;
             const materia = document.getElementById('aula-materia').value;
             const data = document.getElementById('aula-data').value;
             const conteudo = document.getElementById('aula-conteudo').value;
 
             if (editingAulaId) {
-                // Atualização
                 const i = APP_STATE.aulas.findIndex(x => x.id === editingAulaId);
                 if (i !== -1) {
                     APP_STATE.aulas[i] = { id: editingAulaId, turmaId, materia, data, conteudo };
@@ -1235,7 +1416,6 @@
                 document.getElementById('aula-cancel-btn').classList.add('hidden');
                 document.getElementById('aula-form-title').innerHTML = `<i class="fa-solid fa-chalkboard-user text-brandPink"></i> Registrar Conteúdo`;
             } else {
-                // Novo
                 const nova = { id: `aula-${Date.now()}`, turmaId, materia, data, conteudo };
                 APP_STATE.aulas.push(nova);
                 showToast("Nova aula registrada.");
@@ -1252,7 +1432,7 @@
 
             editingAulaId = a.id;
             document.getElementById('aula-turma-select').value = a.turmaId;
-            updateAulaMateriaDropdown(); // Atualiza dropdown antes de selecionar a matéria
+            updateAulaMateriaDropdown();
             document.getElementById('aula-materia').value = a.materia;
             document.getElementById('aula-data').value = a.data;
             document.getElementById('aula-conteudo').value = a.conteudo;
@@ -1261,7 +1441,6 @@
             document.getElementById('aula-cancel-btn').classList.remove('hidden');
             document.getElementById('aula-form-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-brandPink"></i> Editar Registro de Aula`;
 
-            // Scroll suave até o formulário no mobile
             document.getElementById('aulaForm').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -1288,9 +1467,9 @@
 
         function renderAulas() {
             const tbody = document.getElementById('aulasTableBody');
+            if (!tbody) return;
             tbody.innerHTML = '';
             
-            // Ordenar descrescente pela data
             const sorted = [...APP_STATE.aulas].sort((a,b) => new Date(b.data) - new Date(a.data));
             
             sorted.forEach(a => {
@@ -1317,7 +1496,6 @@
             });
         }
 
-
         // ================= FREQUÊNCIA E COMPARAÇÃO DISCIPLINAR =================
         function loadFrequenciaAlunos() {
             const tId = document.getElementById('freq-turma-select').value;
@@ -1327,7 +1505,6 @@
 
             if (!tId || !data) return;
 
-            // Identificar dinamicamente as matérias registradas nessa data
             const aulasDoDia = APP_STATE.aulas.filter(x => x.turmaId === tId && x.data === data);
             const containerAulas = document.getElementById('freq-aulas-do-dia');
             
@@ -1344,7 +1521,6 @@
             const chamadasHoje = APP_STATE.frequencia[key] || {};
 
             filteredAlunos.forEach(aluno => {
-                // Se já existir registro, usa o antigo, senão o padrão é presente (true)
                 const isPresent = chamadasHoje[aluno.id] !== undefined ? chamadasHoje[aluno.id] : true;
                 const tr = document.createElement('tr');
                 tr.id = `row-freq-${aluno.id}`;
@@ -1363,7 +1539,6 @@
                         </label>
                     </td>
                 `;
-                // Atributo de suporte temporário de renderização
                 tr.setAttribute('data-present', isPresent);
                 tbody.appendChild(tr);
             });
@@ -1420,7 +1595,6 @@
             showToast("Chamada do dia gravada!");
         }
 
-
         // ================= BOLETIM, NOTAS E RUBRICAS =================
         function updateBoletimAlunosDropdown() {
             const tId = document.getElementById('boletim-turma-select').value;
@@ -1439,7 +1613,6 @@
                 select.appendChild(opt);
             });
 
-            // Adiciona disciplinas de forma dinâmica no seletor de lançamento
             const disciplinas = getTurmaDisciplines(tId);
             disciplinas.forEach(d => {
                 const opt = document.createElement('option');
@@ -1455,8 +1628,10 @@
                 const comp = APP_STATE.comportamento[aId] || { c1: 3, c2: 3, c3: 3, c4: 3, c5: 3 };
                 for (let i = 1; i <= 5; i++) {
                     const slider = document.getElementById(`input-c${i}`);
-                    slider.value = comp[`c${i}`];
-                    updateSliderLabel(`c${i}`, comp[`c${i}`]);
+                    if (slider) {
+                        slider.value = comp[`c${i}`];
+                        updateSliderLabel(`c${i}`, comp[`c${i}`]);
+                    }
                 }
             }
             renderBoletimVisual();
@@ -1464,6 +1639,7 @@
 
         function updateSliderLabel(id, val) {
             const lbl = document.getElementById(`lbl-${id}`);
+            if (!lbl) return;
             const details = RUBRICS_MAP[val];
             lbl.textContent = details.name;
             lbl.className = `text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${details.color}`;
@@ -1515,7 +1691,6 @@
             showToast("Comportamento salvo!");
         }
 
-        // CÁLCULO INTELIGENTE DE FALTAS POR DISCIPLINA
         function getMateriaAbsencesStats(alunoId, turmaId, materia) {
             const registeredClasses = APP_STATE.aulas.filter(a => a.turmaId === turmaId && a.materia === materia);
             const totalAulas = registeredClasses.length;
@@ -1542,6 +1717,7 @@
             const tbody = document.getElementById('bol-table-body');
             const summary = document.getElementById('bol-behavior-summary');
             
+            if (!tbody || !summary) return;
             tbody.innerHTML = '';
             summary.innerHTML = '';
 
@@ -1550,6 +1726,7 @@
                 document.getElementById('bol-print-turma').textContent = "-";
                 document.getElementById('bol-print-responsavel').textContent = "-";
                 document.getElementById('bol-print-telefone').textContent = "-";
+                document.getElementById('bol-print-ano').textContent = "-";
                 summary.innerHTML = `<div class="col-span-2 text-center text-slate-400 italic text-xs py-4">Nenhum estudante selecionado.</div>`;
                 return;
             }
@@ -1561,9 +1738,8 @@
             document.getElementById('bol-print-turma').textContent = `${t.nome} (${t.turno})`;
             document.getElementById('bol-print-responsavel').textContent = al.responsavel || 'Não Informado';
             document.getElementById('bol-print-telefone').textContent = al.telefone || 'Não Informado';
-            document.getElementById('bol-print-ano').textContent = t.ano;
+            document.getElementById('bol-print-ano').textContent = t.ano || '-';
 
-            // Busca as disciplinas dinamicamente de acordo com a turma
             const materias = getTurmaDisciplines(t.id).map(d => d.nome);
             const alunoGrades = APP_STATE.notas[aId] || {};
 
@@ -1576,7 +1752,6 @@
                     media = ((parseFloat(n1) + parseFloat(n2)) / 2).toFixed(1);
                 }
 
-                // Cálculo integrado de faltas da matéria
                 const stats = getMateriaAbsencesStats(aId, t.id, mat);
 
                 const tr = document.createElement('tr');
@@ -1590,7 +1765,6 @@
                 tbody.appendChild(tr);
             });
 
-            // Resumo Comportamental com Descrição Teórica para os Pais
             const comp = APP_STATE.comportamento[aId] || { c1: 3, c2: 3, c3: 3, c4: 3, c5: 3 };
             
             Object.keys(RUBRICS_INFO).forEach(key => {
@@ -1621,6 +1795,152 @@
                 `;
                 summary.appendChild(wrapper);
             });
+        }
+
+        // ================= NOVO: SISTEMA EXCLUSIVO DOS PAIS =================
+        function updatePaisAlunosDropdown() {
+            const tId = document.getElementById('pais-turma-select').value;
+            const select = document.getElementById('pais-aluno-select');
+            select.innerHTML = '<option value="">-- Escolha o Aluno --</option>';
+
+            if (!tId) return;
+            const list = APP_STATE.alunos.filter(a => a.turmaId === tId);
+            list.forEach(al => {
+                const opt = document.createElement('option');
+                opt.value = al.id;
+                opt.textContent = al.nome;
+                select.appendChild(opt);
+            });
+            document.getElementById('pais-boletim-card').classList.add('hidden');
+            document.getElementById('pais-empty-card').classList.remove('hidden');
+        }
+
+        function loadPaisDashboard() {
+            const aId = document.getElementById('pais-aluno-select').value;
+            const tbody = document.getElementById('pais-table-body');
+            const summary = document.getElementById('pais-behavior-summary');
+            
+            if (!aId) {
+                document.getElementById('pais-boletim-card').classList.add('hidden');
+                document.getElementById('pais-empty-card').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('pais-boletim-card').classList.remove('hidden');
+            document.getElementById('pais-empty-card').classList.add('hidden');
+
+            const al = APP_STATE.alunos.find(x => x.id === aId);
+            const t = APP_STATE.turmas.find(x => x.id === al.turmaId);
+
+            document.getElementById('pais-view-nome').textContent = `Boletim de ${al.nome}`;
+            document.getElementById('pais-view-turma').textContent = `Turma: ${t.nome} (${t.turno})`;
+
+            tbody.innerHTML = '';
+            summary.innerHTML = '';
+
+            const materias = getTurmaDisciplines(t.id).map(d => d.nome);
+            const alunoGrades = APP_STATE.notas[aId] || {};
+
+            let somaMedias = 0;
+            let totalMateriasComNota = 0;
+            let totalFaltasPeriodo = 0;
+
+            materias.forEach(mat => {
+                const n1 = alunoGrades[mat]?.b1 || '-';
+                const n2 = alunoGrades[mat]?.b2 || '-';
+                let media = '-';
+
+                if (n1 !== '-' && n2 !== '-') {
+                    media = ((parseFloat(n1) + parseFloat(n2)) / 2).toFixed(1);
+                    somaMedias += parseFloat(media);
+                    totalMateriasComNota++;
+                }
+
+                const stats = getMateriaAbsencesStats(aId, t.id, mat);
+                totalFaltasPeriodo += stats.faltas;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2 border text-slate-700 font-bold">${mat}</td>
+                    <td class="p-2 border text-center text-slate-500">${n1}</td>
+                    <td class="p-2 border text-center text-slate-500">${n2}</td>
+                    <td class="p-2 border text-center font-bold ${media >= 6 ? 'text-emerald-600' : (media === '-' ? 'text-slate-400' : 'text-brandPink')}">${media}</td>
+                    <td class="p-2 border text-center text-slate-500">${stats.percentage}% <span class="text-[9px] text-slate-300 font-normal">(${stats.faltas}/${stats.total} aulas)</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Atualização dos Painéis Rápidos (Stats)
+            const mediaGeralVal = totalMateriasComNota > 0 ? (somaMedias / totalMateriasComNota).toFixed(1) : '-';
+            document.getElementById('pais-stat-media').textContent = mediaGeralVal;
+            
+            const totalAulasDadas = APP_STATE.aulas.filter(a => a.turmaId === t.id).length;
+            const freqGeralVal = totalAulasDadas > 0 ? Math.round(((totalAulasDadas - totalFaltasPeriodo) / totalAulasDadas) * 100) : 100;
+            document.getElementById('pais-stat-freq').textContent = `${freqGeralVal}%`;
+            document.getElementById('pais-stat-aulas').textContent = totalAulasDadas;
+
+            const comp = APP_STATE.comportamento[aId] || { c1: 3, c2: 3, c3: 3, c4: 3, c5: 3 };
+            
+            Object.keys(RUBRICS_INFO).forEach(key => {
+                const val = comp[key] || 3;
+                const visual = RUBRICS_MAP[val];
+                const percentage = (val / 5) * 100;
+                const info = RUBRICS_INFO[key];
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'bg-slate-50 p-3 border border-slate-100 rounded-xl flex flex-col justify-between';
+                wrapper.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start gap-2 mb-1">
+                            <h5 class="text-[11px] font-bold text-slate-800 leading-tight">${info.title}</h5>
+                            <span class="text-[8px] font-bold px-2 py-0.5 rounded-full border shrink-0 transition-all ${visual.color}">${visual.name}</span>
+                        </div>
+                        <p class="text-[9px] text-slate-400 leading-tight mb-3">${info.desc}</p>
+                    </div>
+                    <div>
+                        <div class="w-full bg-slate-200 rounded-full h-1">
+                            <div class="${visual.barColor} h-1 transition-all duration-300" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+                summary.appendChild(wrapper);
+            });
+        }
+
+        function renderMuralInformativos() {
+            const container = document.getElementById('pais-mural-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            APP_STATE.informativos.forEach(info => {
+                const item = document.createElement('div');
+                item.className = `p-4 rounded-xl border ${info.color} text-xs transition-all hover:scale-[1.01]`;
+                item.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 bg-white/65 rounded-full">${info.tag}</span>
+                        <span class="text-[9px] opacity-60 font-medium">${info.date}</span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 mb-1">${info.title}</h4>
+                    <p class="text-slate-600 leading-relaxed text-[11px]">${info.desc}</p>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function sendMessageToCoord(e) {
+            e.preventDefault();
+            const parentName = document.getElementById('parent-msg-name').value.trim();
+            const parentMsg = document.getElementById('parent-msg-text').value.trim();
+
+            if (!parentName || !parentMsg) {
+                showToast("Por favor, preencha todos os campos da mensagem.", "error");
+                return;
+            }
+
+            // Simulação de Envio
+            showToast("Mensagem enviada com sucesso! A coordenação responderá em breve.", "success");
+            document.getElementById('parent-msg-name').value = '';
+            document.getElementById('parent-msg-text').value = '';
         }
 
         function formatDate(dateStr) {
