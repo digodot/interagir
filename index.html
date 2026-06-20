@@ -546,15 +546,15 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDaz8pTrNrasRuPoEb5et7d7lqVGhrmrjc",
-            authDomain: "interagir-2890d.firebaseapp.com",
-            projectId: "interagir-2890d",
-            storageBucket: "interagir-2890d.firebasestorage.app",
-            messagingSenderId: "1078924588792",
-            appId: "1:1078924588792:web:1e13675c39e9bf99606d0d",
-            measurementId: "G-794SVGNT5P"
-        };
+const firebaseConfig = {
+  apiKey: "AIzaSyDaz8pTrNrasRuPoEb5et7d7lqVGhrmrjc",
+  authDomain: "interagir-2890d.firebaseapp.com",
+  projectId: "interagir-2890d",
+  storageBucket: "interagir-2890d.firebasestorage.app",
+  messagingSenderId: "1078924588792",
+  appId: "1:1078924588792:web:1e13675c39e9bf99606d0d",
+  measurementId: "G-794SVGNT5P"
+};
         
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -764,17 +764,127 @@
                 APP_DATA.aulas = []; snap.forEach(doc => APP_DATA.aulas.push({ id: doc.id, ...doc.data() })); renderAulas();
             });
 
-            db.collection("usuarios").onSnapshot(snap => {
-                APP_DATA.usuarios = []; const tbody = document.getElementById('usersTableBody'); if(!tbody) return; tbody.innerHTML = '';
-                snap.forEach(doc => {
-                    const u = { id: doc.id, ...doc.data() }; APP_DATA.usuarios.push(u);
-                    if(tbody) {
-                        tbody.innerHTML += `<tr class="border-b"><td class="py-2"><strong>${u.nome}</strong><br>${u.email}</td><td><span class="capitalize text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md font-bold text-[11px]">${u.role}</span></td><td class="text-right space-x-2 whitespace-nowrap"><button onclick="editUser('${u.id}')" class="text-brandBlue font-bold"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteUserFromServer('${u.id}')" class="text-rose-500"><i class="fa-solid fa-trash"></i></button></td></tr>`;
-                    }
-                });
-                updateProfessorDropdown();
-            });
+           // =============================================================================
+// MÓDULO DE CONTROLE DE ACESSOS E USUÁRIOS (SEGURO & CORRIGIDO)
+// =============================================================================
+
+// 1. ESCUTA ATIVA DO BANCO DE DADOS (RENDERIZAÇÃO DA TABELA)
+db.collection("usuarios").onSnapshot(snap => {
+    APP_DATA.usuarios = [];
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // Captura o perfil do usuário logado no sistema
+    const minhaRole = currentUserProfile?.role || '';
+
+    snap.forEach(doc => {
+        const u = { id: doc.id, ...doc.data() };
+        APP_DATA.usuarios.push(u);
+
+        // REGRA 1: Se eu sou coordenador, o superAdmin fica invisível para mim
+        if (minhaRole === 'coordenador' && u.role === 'superAdmin') {
+            return; // Pula este usuário e vai para o próximo
         }
+
+        // REGRA 2: Determina se o usuário logado tem permissão para alterar este alvo
+        let acoesPermitidas = false;
+        if (minhaRole === 'superAdmin') {
+            acoesPermitidas = true; // SuperAdmin pode alterar qualquer conta
+        } else if (minhaRole === 'coordenador' && (u.role === 'professor' || u.role === 'pais')) {
+            acoesPermitidas = true; // Coordenador só altera professor e pais
+        }
+
+        // Renderiza os botões de ação com base na permissão concedida acima
+        const botoesAcao = acoesPermitidas 
+            ? `<button onclick="editUser('${u.id}')" class="text-brandBlue font-bold bg-blue-50 px-2 py-1 rounded-lg mr-1" title="Editar"><i class="fa-solid fa-pen-to-square"></i></button>
+               <button onclick="deleteUserFromServer('${u.id}')" class="text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded-lg" title="Excluir"><i class="fa-solid fa-trash"></i></button>`
+            : `<span class="text-slate-400 italic text-[11px]">Sem permissão</span>`;
+
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition-colors">
+                <td class="py-2"><strong>${u.nome || 'Sem Nome'}</strong><br><span class="text-slate-400 text-xs">${u.email}</span></td>
+                <td><span class="capitalize text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md font-mono text-[11px]">${u.role || 'Não definido'}</span></td>
+                <td class="text-right whitespace-nowrap">${botoesAcao}</td>
+            </tr>
+        `;
+    });
+});
+
+// 2. ABERTURA DO MODAL DE GERENCIAMENTO (TRAVA DO FORMULÁRIO)
+function openManageUsersModal() {
+    const modal = document.getElementById('manageUsersModal');
+    if (!modal) return;
+    
+    modal.classList.remove('hidden');
+    clearUserForm(); // Limpa campos de ID, nome, e-mail anteriores
+    
+    const minhaRole = currentUserProfile?.role || '';
+    const selectRole = document.getElementById('user-role');
+    
+    if (!selectRole) return;
+
+    if (minhaRole === 'coordenador') {
+        // Força a seleção inicial a ser 'professor' para evitar acidentes
+        selectRole.value = 'professor';
+        if (typeof toggleUserSelects === 'function') toggleUserSelects();
+        
+        // Esconde as opções de criar SuperAdmin ou outro Coordenador no HTML
+        Array.from(selectRole.options).forEach(option => {
+            if (option.value === 'superAdmin' || option.value === 'coordenador') {
+                option.style.display = 'none';
+            } else {
+                option.style.display = 'block';
+            }
+        });
+    } else {
+        // Se for SuperAdmin, exibe todas as opções do seletor normalmente
+        Array.from(selectRole.options).forEach(option => option.style.display = 'block');
+    }
+}
+
+// 3. FUNÇÃO DE EXCLUSÃO SEGURA (BLOQUEIO DE BACKEND NO FRONT)
+async function deleteUserFromServer(id) { 
+    try {
+        // Busca os dados do usuário direto no documento antes de deletar
+        const alvoDoc = await db.collection("usuarios").doc(id).get();
+        if (!alvoDoc.exists) {
+            alert("Usuário não encontrado no sistema.");
+            return;
+        }
+        
+        const usuarioAlvo = alvoDoc.data();
+        const minhaRole = currentUserProfile?.role || '';
+
+        // Bloqueio crítico: Impede coordenadores de deletarem níveis equivalentes ou superiores
+        if (minhaRole === 'coordenador' && (usuarioAlvo.role === 'superAdmin' || usuarioAlvo.role === 'coordenador')) {
+            alert("Ação negada: Seu nível de acesso (Coordenador) não permite excluir este tipo de usuário.");
+            return;
+        }
+
+        // Se passar da trava, pede a confirmação padrão
+        if (confirm(`Tem certeza de que deseja remover permanentemente o usuário ${usuarioAlvo.nome || usuarioAlvo.email}?`)) {
+            await db.collection("usuarios").doc(id).delete();
+            alert("Usuário removido com sucesso.");
+        }
+    } catch (error) {
+        console.error("Erro ao deletar usuário:", error);
+        alert("Ocorreu um erro ao tentar processar a exclusão.");
+    }
+}
+        }
+		// Exemplo de onde você valida as abas no carregamento do perfil (currentUserProfile)
+const minhaRole = currentUserProfile?.role || '';
+
+if (minhaRole === 'professor') {
+    // 1. Esconde a aba de Turmas no menu superior
+    const tabTurmas = document.getElementById('tab-turmas'); // Ajuste para o ID real do seu HTML
+    if (tabTurmas) tabTurmas.classList.add('hidden');
+    
+    // 2. Esconde botões de "Adicionar Aluno" ou "Excluir Aluno" se existirem na tela
+    const btnAddAluno = document.getElementById('btn-add-aluno');
+    if (btnAddAluno) btnAddAluno.classList.add('hidden');
+}
 
         // ================= VIDEOS DO YOUTUBE =================
         function startVideosSync() {
