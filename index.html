@@ -1470,9 +1470,13 @@ function loadPaisStudentData() {
         }
     }
 
-    try { loadPaisStudentGrades(); } catch(e){}
-    try { if(typeof loadPaisStudentRubricas === 'function') loadPaisStudentRubricas(); } catch(e){}
-    try { if(aluno && aluno.turmaId) loadPaisTimelineObservations(aId, aluno.turmaId); } catch(e){}
+    try { loadPaisStudentGrades(); } catch(e) {}
+    try { if(typeof loadPaisStudentRubricas === 'function') loadPaisStudentRubricas(); } catch(e) {}
+    try { 
+        if (aluno && aluno.turmaId) { 
+            loadPaisTimelineObservacoes(aId, aluno.turmaId); 
+        } 
+    } catch(e) { console.error("Erro ao chamar a timeline:", e); }
 }
 
 async function loadPaisStudentGrades() {
@@ -1688,8 +1692,137 @@ async function saveAula(e) {
         async function savePresence(tId, d, aId, s) { const ref = db.collection("turmas").doc(tId).collection("frequencia").doc(d); const doc = await ref.get(); let ps = doc.exists ? doc.data().presencas || {} : {}; ps[aId] = s; await ref.set({ presencas: ps }, { merge: true }); loadFrequenciaAlunos(); }
         function openObsModal(aId, tId, d, txt) { activeObsAlunoId = aId; activeObsTurmaId = tId; activeObsData = d; const a = APP_DATA.alunos.find(x => x.id === aId); document.getElementById('obs-modal-aluno-nome').innerText = a ? a.nome : 'Anotar'; document.getElementById('obs-modal-data-label').innerText = `Diário: ${d}`; document.getElementById('obs-modal-text').value = txt || ''; document.getElementById('studentObsModal').classList.remove('hidden'); }
         function closeObsModal() { document.getElementById('studentObsModal').classList.add('hidden'); activeObsAlunoId = null; activeObsTurmaId = null; activeObsData = null; }
-        async function saveStudentObs() { if(!activeObsTurmaId || !activeObsData || !activeObsAlunoId) return; const txt = document.getElementById('obs-modal-text').value.trim(); const ref = db.collection("turmas").doc(activeObsTurmaId).collection("frequencia").doc(activeObsData); const doc = await ref.get(); let obs = doc.exists ? doc.data().observacoes || {} : {}; if(txt) obs[activeObsAlunoId] = txt; else delete obs[activeObsAlunoId]; await ref.set({ observacoes: obs }, { merge: true }); closeObsModal(); loadFrequenciaAlunos(); }
-        async function loadPaisTimelineObservacoes(aId, tId) { const cont = document.getElementById('pais-timeline-observacoes'); if(!cont || !aId || !tId) return; cont.innerHTML = `<p class="text-slate-400 text-xs text-center py-4">Buscando diário...</p>`; const snap = await db.collection("turmas").doc(tId).collection("frequencia").get(); let html = ''; let regs = []; snap.forEach(doc => { const ms = doc.data().materiasDoDia || []; const o = doc.data().observacoes?.[aId] || ''; if(o || doc.data().presencas?.[aId] || ms.length > 0) regs.push({ data: doc.id, status: doc.data().presencas?.[aId] || 'P', obs: o, materias: ms }); }); regs.sort((a,b)=>b.data.localeCompare(a.data)); if(regs.length === 0) { cont.innerHTML = `<p class="text-slate-400 text-xs text-center py-4">Nenhum diário recente.</p>`; return; } regs.forEach(r => { const bC = r.status === 'P' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'; let ts = ''; if(r.materias.length > 0) { ts = `<div class="flex flex-wrap gap-1 mt-1.5">`; r.materias.forEach(m => { ts += `<span class="bg-blue-50 text-brandBlue border border-blue-100 rounded-md px-1.5 py-0.5 text-[10px] font-bold">${m}</span>`; }); ts += `</div>`; } html += `<div class="p-3.5 bg-slate-50 border rounded-2xl text-xs space-y-1.5 shadow-sm"><div class="flex justify-between items-center"><span class="font-bold text-slate-500 font-mono"><i class="fa-solid fa-calendar-day mr-1"></i>${r.data}</span><span class="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase ${bC}">${r.status === 'P' ? 'Presença' : 'Falta'}</span></div>${ts}${r.obs ? `<div class="bg-white border p-2.5 rounded-xl text-slate-700 mt-1 border-l-4 border-l-brandPink"><strong class="text-[10px] uppercase text-brandPink block mb-0.5">Nota do Professor:</strong><p class="italic font-medium leading-relaxed">${r.obs}</p></div>` : ''}</div>`; }); cont.innerHTML = html; }
+        async function saveStudentObs() {
+    if (!activeObsTurmaId || !activeObsData || !activeObsAlunoId) return;
+
+    const txt = document.getElementById('obs-modal-text').value.trim();
+
+    const ref = db.collection("turmas").doc(activeObsTurmaId)
+                  .collection("frequencia").doc(activeObsData);
+    try {
+        await ref.set({ observacoes: { [activeObsAlunoId]: txt } }, { merge: true });
+        alert("Observação salva com sucesso!");
+        closeObsModal();
+        loadFrequenciaAlunos();
+    } catch (error) {
+        console.error("Erro ao salvar observação:", error);
+        alert("Erro ao salvar no banco de dados.");
+    }
+}
+        function loadPaisTimelineObservacoes(alunoId, turmaId) {
+    const cont = document.getElementById('pais-timeline-observacoes');
+    if (!cont || !alunoId || !turmaId) return;
+
+    cont.innerHTML = "<p class='text-slate-400 text-xs text-center py-4'>Carregando...</p>";
+
+    db.collection("turmas").doc(turmaId).collection("frequencia")
+      .onSnapshot((snapshot) => {
+          if (snapshot.empty) {
+              cont.innerHTML = "<p class='text-slate-400 text-xs text-center py-4'>Nenhum recado ou diário recente para este aluno.</p>";
+              return;
+          }
+
+          let registros = [];
+
+          snapshot.forEach((doc) => {
+              const dia = doc.data();
+              const status = dia.presencas ? (dia.presencas[alunoId] || null) : null;
+              const obs    = dia.observacoes ? (dia.observacoes[alunoId] || '') : '';
+
+              if (status || obs) {
+                  registros.push({ data: doc.id, status: status || 'P', observacao: obs });
+              }
+          });
+
+          if (registros.length === 0) {
+              cont.innerHTML = "<p class='text-slate-400 text-xs text-center py-4'>Nenhum recado ou diário recente para este aluno.</p>";
+              return;
+          }
+
+          registros.sort((a, b) => b.data.localeCompare(a.data));
+
+          let html = "";
+          registros.forEach((reg) => {
+              const statusLabel = reg.status === 'F'
+                  ? '<span class="text-red-500 font-bold">\u274C Falta</span>'
+                  : '<span class="text-green-600 font-bold">\u2705 Presença</span>';
+              const temObs = reg.observacao && reg.observacao.trim() !== "";
+              const partes = reg.data.split('-');
+              const dataExibicao = partes[2] + '/' + partes[1] + '/' + partes[0];
+
+              html += '<div class="p-3 bg-slate-50 rounded-xl mb-2 border-l-4 ' + (reg.status === 'F' ? 'border-red-400' : 'border-emerald-400') + ' shadow-sm">' +
+                  '<div class="flex justify-between items-center mb-1">' +
+                  '<span class="text-[10px] text-slate-400 font-mono font-bold">' + dataExibicao + '</span>' +
+                  '<span class="text-xs">' + statusLabel + '</span>' +
+                  '</div>' +
+                  '<p class="text-xs text-slate-600 italic mt-1">' +
+                  (temObs ? '"' + reg.observacao + '"' : 'Presença registrada sem observações.') +
+                  '</p></div>';
+          });
+
+          cont.innerHTML = html;
+
+      }, (error) => {
+          console.error("Erro ao carregar timeline:", error);
+          cont.innerHTML = "<p class='text-red-500 text-xs text-center py-4'>Erro ao acessar o diário.</p>";
+      });
+}
+
+// Função auxiliar para montar a lista na tela
+function renderizarListaFrequencia(registros, cont) {
+    registros.sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+    let htmlRecados = "";
+
+    registros.forEach((reg) => {
+        if (!reg.status && !reg.observacao) return;
+        const temObs = reg.observacao && reg.observacao.trim() !== "";
+        const statusPresenca = reg.status === 'F' ? '<span class="text-red-500 font-bold">❌ Falta</span>' : '<span class="text-green-600 font-bold">✅ Presença</span>';
+        let dataExibicao = reg.data || "Data N/A";
+        if (dataExibicao.includes('-')) {
+            const partes = dataExibicao.split('-');
+            dataExibicao = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        htmlRecados += `
+          <div class="p-3 bg-slate-50 rounded-xl mb-2 border-l-4 ${reg.status === 'F' ? 'border-red-400' : 'border-emerald-400'} shadow-sm">
+              <div class="flex justify-between items-center mb-1">
+                  <span class="text-[10px] text-slate-400 font-mono font-bold">${dataExibicao}</span>
+                  <span class="text-xs">${statusPresenca}</span>
+              </div>
+              <p class="text-xs text-slate-600 italic mt-1">${temObs ? `"${reg.observacao}"` : "Presença registrada sem observações."}</p>
+          </div>`;
+    });
+
+    cont.innerHTML = htmlRecados || "<p class='text-slate-400 text-xs text-center py-4'>Nenhum recado recente.</p>";
+}
+
+// Função auxiliar caso sua estrutura salve datas como subcampos/chaves dentro do doc do aluno
+function renderizarDadosFrequencia(dataDoc, cont) {
+    let htmlRecados = "";
+    // Filtra apenas as chaves que são datas (ex: 2026-06-25)
+    const datas = Object.keys(dataDoc).filter(key => key.includes('-')).sort().reverse();
+
+    datas.forEach((dataKey) => {
+        const reg = dataDoc[dataKey];
+        if (typeof reg !== 'object') return;
+        
+        const statusPresenca = reg.status === 'F' ? '<span class="text-red-500 font-bold">❌ Falta</span>' : '<span class="text-green-600 font-bold">✅ Presença</span>';
+        const partes = dataKey.split('-');
+        const dataExibicao = `${partes[2]}/${partes[1]}/${partes[0]}`;
+        const temObs = reg.observacao && reg.observacao.trim() !== "";
+
+        htmlRecados += `
+          <div class="p-3 bg-slate-50 rounded-xl mb-2 border-l-4 ${reg.status === 'F' ? 'border-red-400' : 'border-emerald-400'} shadow-sm">
+              <div class="flex justify-between items-center mb-1">
+                  <span class="text-[10px] text-slate-400 font-mono font-bold">${dataExibicao}</span>
+                  <span class="text-xs">${statusPresenca}</span>
+              </div>
+              <p class="text-xs text-slate-600 italic mt-1">${temObs ? `"${reg.observacao}"` : "Presença registrada sem observações."}</p>
+          </div>`;
+    });
+
+    cont.innerHTML = htmlRecados || "<p class='text-slate-400 text-xs text-center py-4'>Nenhum recado recente.</p>";
+}
         async function deleteUserFromServer(id) { if(confirm("Remover usuário?")) await db.collection("usuarios").doc(id).delete(); }
         async function handleLogin(e) { e.preventDefault(); try { await auth.signInWithEmailAndPassword(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); } catch(err) { alert("Erro de login."); } }
         async function handleForgotPassword() { const e = document.getElementById('loginEmail').value.trim(); if(!e) { alert("Digite o e-mail."); return; } try { await auth.sendPasswordResetEmail(e); alert("Link enviado."); } catch(err) { alert("Link enviado."); } }
