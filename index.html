@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Portal Escola Interagir - Gestão Pedagógica</title>
@@ -1741,5 +1742,14 @@ async function saveAula(e) {
         <i class="fa-brands fa-instagram text-xs"></i> @digodot
     </a>
 </div>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('PWA ativo com sucesso!', reg))
+        .catch(err => console.log('Erro ao registrar PWA:', err));
+    });
+  }
+</script>
 </body>
 </html>
