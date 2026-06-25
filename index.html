@@ -1601,7 +1601,8 @@ async function loadPaisStudentGrades() {
             const excelBox = document.getElementById('box-excel-import');
             if (excelBox) excelBox.classList.toggle('hidden', currentUserProfile?.role === 'coordenador');
 
-            APP_DATA.alunos.filter(a => a.turmaId === currentManageTurmaId).forEach(a => {
+            APP_DATA.alunos.filter(a => a.turmaId === currentManageTurmaId).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    .forEach(a => {
                 // EXIGÊNCIA: Coordenador não vê o botão de lixeira (remover aluno)
                 const delBtn = currentUserProfile?.role === 'superAdmin' ? `<button onclick="removeStudent('${a.id}')" class="text-rose-500"><i class="fa-solid fa-trash"></i></button>` : '';
                 
