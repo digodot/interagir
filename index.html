@@ -210,6 +210,7 @@
                     </div>
                 </div>
             </div>
+			
         </section>
 
         <section id="sec-disciplinas" class="tab-content hidden">
@@ -297,17 +298,26 @@
                     <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm border-t-4 border-brandBlue">
                         <h4 class="text-xs font-bold text-brandBlue uppercase tracking-wider mb-2"><i class="fa-solid fa-calculator mr-1"></i> Lançar Nota Regular</h4>
                         <form onsubmit="saveGrade(event)" class="space-y-3">
-                            <select id="nota-materia" required class="w-full p-3 bg-slate-50 border rounded-xl text-sm"></select>
-                            <select id="nota-periodo" required class="w-full p-3 bg-slate-50 border rounded-xl text-sm">
-                                <option value="b1">1º Bimestre (B1)</option>
-                                <option value="b2">2º Bimestre (B2)</option>
-                            </select>
-                            <div>
-                                <label class="block font-medium mb-1 text-slate-700 text-xs">Nota do Bimestre (0.0 a 10.0):</label>
-                                <input type="number" id="nota-valor" min="0" max="10" step="0.1" required placeholder="Ex: 8.5" class="w-full p-3 bg-slate-50 border rounded-xl text-sm outline-none">
-                            </div>
-                            <button type="submit" class="w-full py-3 bg-brandBlue text-white font-bold rounded-xl text-sm shadow-sm">Gravar Média</button>
-                        </form>
+                <select id="nota-materia" required class="w-full p-3 bg-slate-50 border rounded-xl text-sm">
+                    <option value="">-- Escolha a Disciplina --</option>
+                </select>
+                <select id="nota-unidade" required class="w-full p-3 bg-slate-50 border rounded-xl text-sm mt-2">
+                    <option value="u1">1ª Unidade</option>
+                    <option value="u2">2ª Unidade</option>
+                    <option value="u3">3ª Unidade</option>
+                    <option value="u4">4ª Unidade</option>
+                </select>
+                <select id="nota-periodo" required class="w-full p-3 bg-slate-50 border rounded-xl text-sm mt-2">
+                    <option value="b1">1º Bimestre (B1)</option>
+                    <option value="b2">2º Bimestre (B2)</option>
+                    <option value="rec">Recuperação (Rec)</option>
+                </select>
+                <div class="mt-2">
+                    <label class="block font-medium mb-1 text-slate-700 text-xs">Nota do Bimestre (0.0 a 10.0):</label>
+                    <input type="number" id="nota-valor" min="0" max="10" step="0.1" required placeholder="Ex: 8.5" class="w-full p-3 bg-slate-50 border rounded-xl text-sm">
+                </div>
+                <button type="submit" class="w-full py-3 bg-brandBlue text-white font-bold rounded-xl text-sm shadow-sm mt-3">Gravar Média</button>
+            </form>
                     </div>
 
                     <div class="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm border-t-4 border-brandPink">
@@ -368,19 +378,30 @@
                             <div>ALUNO: <strong id="bol-print-nome" class="block text-brandBlue">-</strong></div>
                             <div>TURMA: <strong id="bol-print-turma" class="block text-brandBlue">-</strong></div>
                         </div>
-                        <div class="table-container">
-                            <table class="w-full text-xs border border-collapse">
-                                <thead class="bg-brandBlue text-white">
-                                    <tr>
-                                        <th class="p-2 border text-left">Matéria</th>
-                                        <th class="p-2 border text-center">B1</th>
-                                        <th class="p-2 border text-center">B2</th>
-                                        <th class="p-2 border text-center">Média</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="bol-table-body"></tbody>
-                            </table>
-                        </div>
+                        <<div class="table-container">
+    <table class="w-full text-xs border border-collapse">
+        <thead class="bg-brandBlue text-white">
+            <tr>
+                <th class="p-2 border text-left" rowspan="2">Matéria</th>
+                <th class="p-2 border text-center" colspan="3">1ª Unidade</th>
+                <th class="p-2 border text-center" colspan="3">2ª Unidade</th>
+                <th class="p-2 border text-center" colspan="3">3ª Unidade</th>
+                <th class="p-2 border text-center" colspan="3">4ª Unidade</th>
+                <th class="p-2 border text-center" rowspan="2">Média Final</th>
+                <th class="p-2 border text-center" rowspan="2">Resultado</th>
+            </tr>
+            <tr>
+                <!-- 1U --> <th class="p-1 border text-center text-[10px]">B1</th><th class="p-1 border text-center text-[10px]">B2</th><th class="p-1 border text-center text-[10px]">Rec</th>
+                <!-- 2U --> <th class="p-1 border text-center text-[10px]">B1</th><th class="p-1 border text-center text-[10px]">B2</th><th class="p-1 border text-center text-[10px]">Rec</th>
+                <!-- 3U --> <th class="p-1 border text-center text-[10px]">B1</th><th class="p-1 border text-center text-[10px]">B2</th><th class="p-1 border text-center text-[10px]">Rec</th>
+                <!-- 4U --> <th class="p-1 border text-center text-[10px]">B1</th><th class="p-1 border text-center text-[10px]">B2</th><th class="p-1 border text-center text-[10px]">Rec</th>
+            </tr>
+        </thead>
+        <tbody id="bol-table-body">
+            <!-- As linhas serão geradas dinamicamente com todas as notas -->
+        </tbody>
+    </table>
+</div>
                         <div class="border-t pt-4 space-y-2">
                             <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider"><i class="fa-solid fa-star text-brandYellow mr-1"></i> Rubricas Socioemocionais Consolidadas</h4>
                             <div id="bol-print-rubricas" class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"></div>
@@ -439,18 +460,55 @@
 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="space-y-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-t-4 border-brandBlue space-y-4" id="pais-boletim-card">
                         <div class="border-b pb-3 flex justify-between items-center">
                             <h2 class="text-xl font-black text-brandDarkBlue" id="pais-view-nome">Aguardando...</h2>
                             <span class="px-3 py-1 bg-slate-100 rounded-full text-xs font-bold text-slate-500" id="pais-view-turma">-</span>
                         </div>
+						<div class="flex justify-between items-center mb-4">
+    <div>
+        <!-- Mantemos a tag do nome exatamente como estava, sem mexer no ID -->
+        <h2 id="pais-view-nome" class="text-xl font-bold text-slate-800"></h2>
+        <span id="pais-view-turma" class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600"></span>
+    </div>
+    <!-- Adicionamos apenas o botão ao lado -->
+    <button onclick="imprimirBoletim()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 px-4 rounded-xl shadow-sm transition-all">
+        <i class="fa-solid fa-print"></i> Imprimir Boletim
+    </button>
+</div>
                         <div class="table-container">
-                            <table class="w-full text-xs border border-collapse">
-                                <thead class="bg-brandBlue text-white"><tr><th class="p-2 border text-left">Matéria</th><th class="p-2 border text-center">B1</th><th class="p-2 border text-center">B2</th><th class="p-2 border text-center">Média</th></tr></thead>
-                                <tbody id="pais-table-body"></tbody>
-                            </table>
+                            <table class="w-full text-left text-xs border border-collapse">
+    <thead class="bg-brandBlue text-white">
+        <tr>
+            <th class="p-2 border text-left" rowspan="2">Matéria</th>
+            <th class="p-1 border text-center" colspan="3">1ª Unidade</th>
+            <th class="p-1 border text-center" colspan="3">2ª Unidade</th>
+            <th class="p-1 border text-center" colspan="3">3ª Unidade</th>
+            <th class="p-1 border text-center" colspan="3">4ª Unidade</th>
+            <th class="p-2 border text-center" rowspan="2">Média Final</th>
+            <th class="p-2 border text-center" rowspan="2">Resultado</th>
+        </tr>
+        <tr>
+            <th class="p-1 border text-center bg-slate-100 text-slate-700 text-[10px]">B1</th>
+            <th class="p-1 border text-center bg-slate-100 text-slate-700 text-[10px]">B2</th>
+            <th class="p-1 border text-center bg-purple-100 text-purple-700 text-[10px]">Rec</th>
+            <th class="p-1 border text-center bg-slate-100 text-slate-700 text-[10px]">B1</th>
+            <th class="p-1 border text-center bg-slate-100 text-slate-700 text-[10px]">B2</th>
+            <th class="p-1 border text-center bg-purple-100 text-purple-700 text-[10px]">Rec</th>
+            <th class="p-1 border text-center bg-slate-100 text-slate-700 text-[10px]">B1</th>
+            <th class="p-1 border text-center bg-slate-100 text-slate-700 text-[10px]">B2</th>
+            <th class="p-1 border text-center bg-purple-100 text-purple-700 text-[10px]">Rec</th>
+            <th class="p-1 border text-center bg-slate-100 text-slate-700 text-[10px]">B1</th>
+            <th class="p-1 border text-center bg-slate-100 text-slate-700 text-[10px]">B2</th>
+            <th class="p-1 border text-center bg-purple-100 text-purple-700 text-[10px]">Rec</th>
+        </tr>
+    </thead>
+    <tbody id="pais-table-body">
+        <!-- Gerado via JS -->
+    </tbody>
+</table>
                         </div>
                         <div class="border-t pt-4 space-y-3">
                             <h3 class="font-black text-brandDarkBlue text-xs uppercase tracking-wider"><i class="fa-solid fa-heart-pulse text-brandPink mr-1"></i> Mapa Socioemocional</h3>
@@ -1386,19 +1444,125 @@ function listenMensagemImportante(idTurma) {
         function loadSelectedStudentData() { loadSelectedStudentGrades(); loadSelectedStudentRubricas(); }
 
         async function loadSelectedStudentGrades() {
-            const aId = document.getElementById('boletim-aluno-select').value; const tId = document.getElementById('boletim-turma-select').value;
-            const aluno = APP_DATA.alunos.find(x => x.id === aId); const turma = APP_DATA.turmas.find(x => x.id === tId);
-            document.getElementById('bol-print-nome').innerText = aluno ? aluno.nome : '-'; document.getElementById('bol-print-turma').innerText = turma ? turma.nome : '-';
-            const tbody = document.getElementById('bol-table-body'); tbody.innerHTML = ''; if(!aId || !turma) return;
-            const snap = await db.collection("alunos").doc(aId).collection("notas").get(); let map = {}; snap.forEach(d => { map[d.data().materia] = d.data(); });
-            if(turma.grades) { turma.grades.forEach(g => {
-                const b1 = map[g.materia]?.b1 !== undefined ? parseFloat(map[g.materia].b1).toFixed(1) : '-'; const b2 = map[g.materia]?.b2 !== undefined ? parseFloat(map[g.materia].b2).toFixed(1) : '-';
-                let med = '-'; if(b1 !== '-' && b2 !== '-') med = ((parseFloat(b1) + parseFloat(b2)) / 2).toFixed(1);
-                tbody.innerHTML += `<tr><td class="p-2 border font-bold">${g.materia}</td><td class="p-2 border text-center">${b1}</td><td class="p-2 border text-center">${b2}</td><td class="p-2 border text-center bg-slate-50 font-bold text-brandBlue">${med}</td></tr>`;
-            }); }
+    const aId = document.getElementById('boletim-aluno-select').value; 
+    const tId = document.getElementById('boletim-turma-select').value;
+
+    const aluno = APP_DATA.alunos.find(x => x.id === aId); 
+    const turma = APP_DATA.turmas.find(x => x.id === tId);
+    
+    document.getElementById('bol-print-nome').innerText = aluno ? aluno.nome : '-'; 
+    document.getElementById('bol-print-turma').innerText = turma ? turma.nome : '-';
+    
+    const tbody = document.getElementById('bol-table-body'); 
+    tbody.innerHTML = ''; 
+    if(!aId || !turma) return;
+    
+    // Mantém a busca idêntica e original do seu banco de dados
+    const snap = await db.collection("alunos").doc(aId).collection("notas").get(); 
+    let map = {}; 
+    
+    snap.forEach(d => { 
+        const data = d.data();
+        if (!map[data.materia]) {
+            map[data.materia] = {};
+        }
+        const und = data.unidade || 'u1';
+        map[data.materia][und] = data;
+    });
+    
+    if(turma.grades) { 
+        turma.grades.forEach(g => {
+            const matData = map[g.materia] || {};
+            let somaMediasUnidades = 0;
+            let unidadesComNota = 0;
+            
+            const getUnitCols = (uKey) => {
+                const u = matData[uKey] || {};
+                const b1 = u.b1 !== undefined ? parseFloat(u.b1).toFixed(1) : '-';
+                const b2 = u.b2 !== undefined ? parseFloat(u.b2).toFixed(1) : '-';
+                const rec = u.rec !== undefined ? parseFloat(u.rec).toFixed(1) : '-';
+                
+                if (b1 !== '-' && b2 !== '-') {
+                    let mediaRegular = (parseFloat(b1) + parseFloat(b2)) / 2;
+                    let mediaUnidade = (rec !== '-') ? parseFloat(rec) : mediaRegular;
+                    somaMediasUnidades += mediaUnidade;
+                    unidadesComNota++;
+                }
+                
+                return `<td class="p-1 border text-center">${b1}</td>
+                        <td class="p-1 border text-center">${b2}</td>
+                        <td class="p-1 border text-center text-purple-600 font-medium">${rec}</td>`;
+            };
+
+            const colU1 = getUnitCols('u1');
+            const colU2 = getUnitCols('u2');
+            const colU3 = getUnitCols('u3');
+            const colU4 = getUnitCols('u4');
+            
+            let mediaFinal = '-';
+            let resultado = '-';
+            
+            if (unidadesComNota > 0) {
+                mediaFinal = (somaMediasUnidades / unidadesComNota).toFixed(1);
+                if (parseFloat(mediaFinal) >= 6.0) {
+                    resultado = '<span class="text-emerald-600 font-bold">Aprovado</span>';
+                } else {
+                    resultado = '<span class="text-rose-600 font-bold">Retido</span>';
+                }
+            }
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td class="p-2 border font-bold">${g.materia}</td>
+                    ${colU1}
+                    ${colU2}
+                    ${colU3}
+                    ${colU4}
+                    <td class="p-2 border text-center bg-slate-50 font-bold text-brandBlue">${mediaFinal}</td>
+                    <td class="p-2 border text-center">${resultado}</td>
+                </tr>`;
+        }); 
+    }
+}
+
+        async function saveGrade(e) {
+    e.preventDefault();
+    const aId = document.getElementById('boletim-aluno-select').value;
+    const materia = document.getElementById('nota-materia').value;
+    const unidade = document.getElementById('nota-unidade').value; 
+    const periodo = document.getElementById('nota-periodo').value;
+    const valor = parseFloat(document.getElementById('nota-valor').value);
+
+    if(!aId || !materia || !unidade || !periodo || isNaN(valor)) {
+        alert("Preencha todos os campos corretamente.");
+        return;
+    }
+
+    try {
+        // ID único combinando Matéria + Unidade para não duplicar dados
+        const docId = `${materia}_${unidade}`;
+        const docRef = db.collection("alunos").doc(aId).collection("notas").doc(docId);
+        const docSnap = await docRef.get();
+
+        let dadosUpdate = {
+            materia: materia,
+            unidade: unidade
+        };
+        dadosUpdate[periodo] = valor; 
+
+        if (docSnap.exists) {
+            await docRef.update(dadosUpdate);
+        } else {
+            await docRef.set(dadosUpdate);
         }
 
-        async function saveGrade(e) { e.preventDefault(); const aId = document.getElementById('boletim-aluno-select').value; const materia = document.getElementById('nota-materia').value; const periodo = document.getElementById('nota-periodo').value; const nVal = parseFloat(document.getElementById('nota-valor').value); if(!aId || !materia || isNaN(nVal)) return; await db.collection("alunos").doc(aId).collection("notas").doc(materia).set({ materia: materia, [periodo]: nVal }, { merge: true }); alert("Nota salva!"); loadSelectedStudentGrades(); }
+        alert("Nota gravada com sucesso!");
+        loadSelectedStudentGrades(); // Atualiza a tabela das 4 unidades instantaneamente
+    } catch(error) {
+        console.error("Erro ao salvar nota: ", error);
+        alert("Erro ao salvar a nota no banco de dados.");
+    }
+}
         async function saveRubricas(e) { e.preventDefault(); const aId = document.getElementById('boletim-aluno-select').value; const p = document.getElementById('rubrica-periodo').value; if(!aId) return; const obj = { periodo: p, participacao: parseInt(document.getElementById('r-participacao').value), relacionamento: parseInt(document.getElementById('r-relacionamento').value), compromisso: parseInt(document.getElementById('r-compromisso').value), atencao: parseInt(document.getElementById('r-atencao').value), autonomia: parseInt(document.getElementById('r-autonomia').value) }; await db.collection("alunos").doc(aId).collection("rubricas").doc(p).set(obj); alert("Rubricas salvas!"); loadSelectedStudentRubricas(); }
         
         async function loadSelectedStudentRubricas() {
@@ -1490,75 +1654,83 @@ async function loadPaisStudentGrades() {
             if (alunoDoc.exists) aluno = { id: alunoDoc.id, ...alunoDoc.data() };
         } catch (err) { console.error(err); }
     }
+    if(!aluno) return;
 
     const selectTurmaEl = document.getElementById('pais-turma-select');
     const tId = (selectTurmaEl && selectTurmaEl.value) ? selectTurmaEl.value : (aluno ? aluno.turmaId : '');
     const turma = APP_DATA.turmas.find(x => x.id === tId);
-    
+
     const tbody = document.getElementById('pais-table-body');
-    if (!tbody) return;
+    if(!tbody) return;
     tbody.innerHTML = '';
-    
-    // --- CONSULTA ADAPTADA AO SEU FIRESTORE ---
-    // Entra em alunos -> ID do Aluno -> subcoleção "notas"
+
+    // Consulta adaptada ao seu Firestore puxando todas as unidades de uma vez
     const snap = await db.collection("alunos").doc(aId).collection("notas").get();
-    
-    let notasMap = {};
-    // Varre os documentos (ex: Matemática) e monta o mapa de notas na memória
-    snap.forEach(doc => {
-        const d = doc.data();
-        if(d.materia) {
-            notasMap[d.materia] = d; // Guarda o objeto que tem b1 e b2
+    let map = {};
+
+    snap.forEach(d => {
+        const data = d.data();
+        if (data.materia) {
+            if (!map[data.materia]) {
+                map[data.materia] = {};
+            }
+            const und = data.unidade || 'u1';
+            map[data.materia][und] = data;
         }
     });
 
-    let linhasRenderizadas = 0;
-
-    // Se a turma tiver uma grade horária/curricular ligada a ela
     if (turma && turma.grades && turma.grades.length > 0) {
         turma.grades.forEach(g => {
-            const mNome = g.materia;
-            const b1 = notasMap[mNome]?.b1 !== undefined ? parseFloat(notasMap[mNome].b1).toFixed(1) : '-';
-            const b2 = notasMap[mNome]?.b2 !== undefined ? parseFloat(notasMap[mNome].b2).toFixed(1) : '-';
-            
-            let m = '-';
-            if(b1 !== '-' && b2 !== '-') m = ((parseFloat(b1) + parseFloat(b2)) / 2).toFixed(1);
-            
+            const matData = map[g.materia] || {};
+            let somaMediasUnidades = 0;
+            let unidadesComNota = 0;
+
+            const getUnitCols = (uKey) => {
+                const u = matData[uKey] || {};
+                const b1 = u.b1 !== undefined ? parseFloat(u.b1).toFixed(1) : '-';
+                const b2 = u.b2 !== undefined ? parseFloat(u.b2).toFixed(1) : '-';
+                const rec = u.rec !== undefined ? parseFloat(u.rec).toFixed(1) : '-';
+
+                if (b1 !== '-' && b2 !== '-') {
+                    let mediaRegular = (parseFloat(b1) + parseFloat(b2)) / 2;
+                    let mediaUnidade = (rec !== '-') ? parseFloat(rec) : mediaRegular;
+                    somaMediasUnidades += mediaUnidade;
+                    unidadesComNota++;
+                }
+
+                return `<td class="p-1 border text-center">${b1}</td>
+                        <td class="p-1 border text-center">${b2}</td>
+                        <td class="p-1 border text-center text-purple-600 font-medium">${rec}</td>`;
+            };
+
+            const colU1 = getUnitCols('u1');
+            const colU2 = getUnitCols('u2');
+            const colU3 = getUnitCols('u3');
+            const colU4 = getUnitCols('u4');
+
+            let mediaFinal = '-';
+            let resultado = '-';
+
+            if (unidadesComNota > 0) {
+                mediaFinal = (somaMediasUnidades / unidadesComNota).toFixed(1);
+                if (parseFloat(mediaFinal) >= 6.0) {
+                    resultado = '<span class="text-emerald-600 font-bold">Aprovado</span>';
+                } else {
+                    resultado = '<span class="text-rose-600 font-bold">Retido</span>';
+                }
+            }
+
             tbody.innerHTML += `
-                <tr class="border-b">
-                    <td class="p-2 font-bold text-slate-700 text-left">${mNome}</td>
-                    <td class="p-2 text-center font-medium">${b1}</td>
-                    <td class="p-2 text-center font-medium">${b2}</td>
-                    <td class="p-2 text-center font-bold text-brandBlue">${m}</td>
-                </tr>
-            `;
-            linhasRenderizadas++;
+                <tr>
+                    <td class="p-2 border font-bold">${g.materia}</td>
+                    ${colU1}
+                    ${colU2}
+                    ${colU3}
+                    ${colU4}
+                    <td class="p-2 border text-center bg-slate-50 font-bold text-brandBlue">${mediaFinal}</td>
+                    <td class="p-2 border text-center">${resultado}</td>
+                </tr>`;
         });
-    }
-
-    // Fallback: Se a turma não tiver grade configurada, renderiza o que encontrou na subcoleção do banco
-    if (linhasRenderizadas === 0) {
-        Object.keys(notasMap).forEach(mNome => {
-            const b1 = notasMap[mNome].b1 !== undefined ? parseFloat(notasMap[mNome].b1).toFixed(1) : '-';
-            const b2 = notasMap[mNome].b2 !== undefined ? parseFloat(notasMap[mNome].b2).toFixed(1) : '-';
-            let m = '-';
-            if(b1 !== '-' && b2 !== '-') m = ((parseFloat(b1) + parseFloat(b2)) / 2).toFixed(1);
-
-            tbody.innerHTML += `
-                <tr class="border-b">
-                    <td class="p-2 font-bold text-slate-700 text-left">${mNome}</td>
-                    <td class="p-2 text-center font-medium">${b1}</td>
-                    <td class="p-2 text-center font-medium">${b2}</td>
-                    <td class="p-2 text-center font-bold text-brandBlue">${m}</td>
-                </tr>
-            `;
-            linhasRenderizadas++;
-        });
-    }
-
-    // Se mesmo assim não houver nenhum documento na subcoleção
-    if (linhasRenderizadas === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Nenhuma nota lançada para este aluno.</td></tr>`;
     }
 }
 
@@ -1850,6 +2022,15 @@ function renderizarDadosFrequencia(dataDoc, cont) {
         alert("Ação negada: Seu perfil de acesso não possui permissão para excluir aulas.");
     }
 }
+function imprimirBoletim() {
+        const tabela = document.getElementById('pais-table-body').closest('table').parentElement.innerHTML;
+        const nomeAluno = document.getElementById('pais-view-nome').innerText;
+        const turmaAluno = document.getElementById('pais-view-turma').innerText;
+        const janela = window.open('', '', 'width=900,height=700');
+        janela.document.write('<html><head><title>Boletim</title><script src="https://cdn.tailwindcss.com"><\/script></head><body><div class="p-6"><h1 class="text-xl font-bold mb-4">Escola Interagir</h1><p><b>Aluno:</b> ' + nomeAluno + ' | ' + turmaAluno + '</p><table class="w-full mt-4 border">' + tabela + '</table></div><script>window.onload=function(){window.print();window.close();}<\/script></body></html>');
+        janela.document.close();
+    }
+
     </script>
 <!-- MODAL ISOLADO PARA MENSAGEM IMPORTANTE -->
 <div id="msgImportanteModal" class="fixed inset-0 bg-slate-900/80 z-[9999] hidden flex items-center justify-center p-4">
@@ -1880,6 +2061,7 @@ function renderizarDadosFrequencia(dataDoc, cont) {
         <i class="fa-brands fa-instagram text-xs"></i> @digodot
     </a>
 </div>
+
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -1888,6 +2070,7 @@ function renderizarDadosFrequencia(dataDoc, cont) {
         .catch(err => console.log('Erro ao registrar PWA:', err));
     });
   }
+  
 </script>
 </body>
 </html>
