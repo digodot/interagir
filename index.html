@@ -463,16 +463,19 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="space-y-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-t-4 border-brandBlue space-y-4" id="pais-boletim-card">
-                        <div class="border-b pb-3 flex justify-between items-center">
-                            <h2 class="text-xl font-black text-brandDarkBlue" id="pais-view-nome">Aguardando...</h2>
-                            <span class="px-3 py-1 bg-slate-100 rounded-full text-xs font-bold text-slate-500" id="pais-view-turma">-</span>
-                        </div>
-						<div class="flex justify-between items-center mb-4">
-    <div>
-        <!-- Mantemos a tag do nome exatamente como estava, sem mexer no ID -->
-        <h2 id="pais-view-nome" class="text-xl font-bold text-slate-800"></h2>
-        <span id="pais-view-turma" class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600"></span>
-    </div>
+        <div class="border-b pb-3 flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-black text-brandDarkBlue" id="pais-view-nome">Aguardando...</h2>
+                <span class="px-3 py-1 bg-slate-100 rounded-full text-xs font-bold text-slate-500" id="pais-view-turma">-</span>
+                <!-- COLAMOS A FREQUÊNCIA AQUI, NO CARD VERDADEIRO -->
+                <span id="pais-view-frequencia" style="margin-left: 15px; font-weight: bold; color: #16a34a;"></span>
+            </div>
+            
+            <!-- O botão de imprimir fica aqui do lado direito -->
+            <button onclick="imprimirBoletim()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 px-4 rounded-xl">
+                <i class="fa-solid fa-print"></i> Imprimir Boletim
+            </button>
+        </div>
     <!-- Adicionamos apenas o botão ao lado -->
     <button onclick="imprimirBoletim()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2 px-4 rounded-xl shadow-sm transition-all">
         <i class="fa-solid fa-print"></i> Imprimir Boletim
@@ -1629,6 +1632,48 @@ function loadPaisStudentData() {
             const tObj = APP_DATA.turmas ? APP_DATA.turmas.find(t => t.id === aluno.turmaId) : null;
             viewTurma.innerText = tObj ? tObj.nome : 'Sem Turma';
         }
+        try {
+            db.collection("turmas").doc(aluno.turmaId).collection("frequencia").get().then(snapshotChamadas => {
+                if (snapshotChamadas.empty) {
+                    const viewFreq = document.getElementById('pais-view-frequencia');
+                    if (viewFreq) viewFreq.innerText = "Frequência: Sem registros";
+                    return;
+                }
+
+                let totalAulas = snapshotChamadas.size;
+                let faltas = 0;
+                let idDoAluno = aluno.id || aId;
+
+                snapshotChamadas.forEach(doc => {
+                    const c = doc.data();
+                    // Verifica se o mapa 'presencas' existe e se o aluno está com "F" (Falta)
+                    if (c.presencas && c.presencas[idDoAluno] === "F") {
+                        faltas++;
+                    }
+                });
+
+                // Cálculo da porcentagem de presença
+                let porcentagemPresenca = 100;
+                if (totalAulas > 0) {
+                    porcentagemPresenca = ((totalAulas - faltas) / totalAulas) * 100;
+                }
+
+                // Injeta o valor calculado na tela
+                const viewFreq = document.getElementById('pais-view-frequencia');
+                if (viewFreq) {
+                    viewFreq.innerText = `Frequência: ${porcentagemPresenca.toFixed(1)}%`;
+                    
+                    // Ajusta a cor dinamicamente: vermelho se for menor que 75%, verde se estiver ok
+                    if (porcentagemPresenca < 75) {
+                        viewFreq.style.color = "#dc2626"; // Vermelho
+                    } else {
+                        viewFreq.style.color = "#16a34a"; // Verde
+                    }
+                }
+            });
+        } catch (err) {
+            console.log("Erro ao buscar frequência no Firestore:", err);
+        }
 
         // Ativa o monitoramento em tempo real do novo balão
         if (aluno.turmaId) {
@@ -2008,6 +2053,7 @@ function renderizarDadosFrequencia(dataDoc, cont) {
         async function handleLogout() { await auth.signOut(); window.location.reload(); }
 		async function gerarRelatorioTurmaDireto(turmaId, turmaNome) {
     try {
+        // 1. Busca os alunos da turma nas coleções possíveis
         let snapshotAlunos = await db.collection("usuarios").where("turmaId", "==", turmaId).get();
         if (snapshotAlunos.empty) snapshotAlunos = await db.collection("usuarios").where("turma", "==", turmaId).get();
         if (snapshotAlunos.empty) snapshotAlunos = await db.collection("alunos").where("turmaId", "==", turmaId).get();
@@ -2018,23 +2064,45 @@ function renderizarDadosFrequencia(dataDoc, cont) {
             return;
         }
 
+        // 2. Busca todas as chamadas dentro da subcoleção real da turma
+        let snapshotChamadas = await db.collection("turmas").doc(turmaId).collection("frequencia").get();
+        let totalAulasRegistradas = snapshotChamadas.size || 0;
+
         let materiasSet = new Set();
         let dadosAlunos = [];
 
+        // 3. Processamento individual de cada aluno da turma
         for (const docAluno of snapshotAlunos.docs) {
             const aluno = docAluno.data();
             const alunoId = docAluno.id;
             const nomeAluno = aluno.nome || aluno.name || "Sem Nome";
-
-            const snapshotNotas = await db.collection("alunos").doc(alunoId).collection("notas").get();
             
-            // Estrutura para separar as notas organizadas por matéria e por unidade
+            let totalFaltasAluno = 0;
+            
+            // Conta as faltas cruzando o ID do aluno no mapa de presenças
+            snapshotChamadas.forEach(docChamada => {
+                const chamada = docChamada.data();
+                if (chamada.presencas && chamada.presencas[alunoId] === "F") {
+                    totalFaltasAluno++;
+                }
+            });
+
+            // Cálculo matemático exato da Porcentagem de Presença
+            let porcentagemPresenca = 100; 
+            if (totalAulasRegistradas > 0) {
+                let presencas = totalAulasRegistradas - totalFaltasAluno;
+                porcentagemPresenca = (presencas / totalAulasRegistradas) * 100;
+            }
+            
+            let stringPresenca = porcentagemPresenca.toFixed(1) + "%";
+
+            // --- Bloco de Notas (Mantido intacto e funcional) ---
+            const snapshotNotas = await db.collection("alunos").doc(alunoId).collection("notas").get();
             let mapaNotas = {};
 
             snapshotNotas.forEach(docNota => {
                 const dataNota = docNota.data();
                 const materia = dataNota.materia;
-                // Pega a unidade (u1, u2, u3, u4) vinda do banco
                 const unidade = dataNota.unidade || docNota.id.split('_')[1] || "u1"; 
                 
                 if (materia) {
@@ -2047,51 +2115,52 @@ function renderizarDadosFrequencia(dataDoc, cont) {
                     let b2 = parseFloat(dataNota.b2) || 0;
                     let rec = parseFloat(dataNota.rec) || 0;
                     
-                    // Média daquela unidade específica
                     let mediaUnidade = (b1 + b2) / 2;
-                    if (rec > mediaUnidade) {
-                        mediaUnidade = rec;
-                    }
+                    if (rec > mediaUnidade) mediaUnidade = rec;
                     
-                    // Salva na unidade correspondente
                     if (mapaNotas[materia].hasOwnProperty(unidade)) {
                         mapaNotas[materia][unidade] = mediaUnidade;
                     }
                 }
             });
 
-            // Calcula a Média Final exata dividindo a soma das 4 unidades por 4
             let mediasFinais = {};
             for (let mat in mapaNotas) {
                 let somaUnidades = mapaNotas[mat].u1 + mapaNotas[mat].u2 + mapaNotas[mat].u3 + mapaNotas[mat].u4;
                 mediasFinais[mat] = somaUnidades / 4;
             }
+            // ---------------------------------------------------
 
-            dadosAlunos.push({ nome: nomeAluno, medias: mediasFinais });
+            dadosAlunos.push({ 
+                nome: nomeAluno, 
+                medias: mediasFinais, 
+                presenca: stringPresenca,
+                faltas: totalFaltasAluno,
+                totalAulas: totalAulasRegistradas
+            });
         }
 
         let listaMaterias = Array.from(materiasSet).sort();
 
+        // 4. Montagem estruturada do Arquivo CSV
         var csv = "\uFEFF"; 
-        csv += "RELATÓRIO DE RENDIMENTO ESCOLAR\n";
+        csv += "RELATÓRIO CONSOLIDADO: RENDIMENTO ESCOLAR E FREQUÊNCIA\n";
         csv += "Turma:;" + turmaNome + "\n";
         csv += "Data de Emissão:;" + new Date().toLocaleDateString('pt-BR') + "\n\n";
         
-        csv += "Nome do Aluno;";
+        // Colunas de cabeçalho incluindo a frequência
+        csv += "Nome do Aluno;Total Aulas;Total Faltas;% Presença;";
         listaMaterias.forEach(m => { csv += m + ";"; });
         csv += "Situação Final\n";
 
         dadosAlunos.forEach(aluno => {
-            csv += `"${aluno.nome}";`;
+            csv += `"${aluno.nome}";"${aluno.totalAulas}";"${aluno.faltas}";"${aluno.presenca}";`;
             let retidoEmAlguma = false;
 
             listaMaterias.forEach(materia => {
                 if (aluno.medias[materia] !== undefined) {
                     let mediaFinalMateria = aluno.medias[materia];
-                    
-                    // Se ficar abaixo de 6.0 (ou a média da sua escola), sinaliza retido
                     if (mediaFinalMateria < 6.0) retidoEmAlguma = true;
-
                     csv += `"${mediaFinalMateria.toFixed(1)}";`;
                 } else {
                     csv += `"0.0";`; 
@@ -2102,34 +2171,17 @@ function renderizarDadosFrequencia(dataDoc, cont) {
             csv += `"${situacaoFinal}"\n`;
         });
 
+        // 5. Download automático do arquivo
         var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         var link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", "Boletim_Consolidado_" + turmaNome.replace(/\s+/g, '_') + ".csv");
+        link.setAttribute("download", "Relatorio_Consolidado_" + turmaNome.replace(/\s+/g, '_') + ".csv");
         document.body.appendChild(link); 
         link.click(); 
         document.body.removeChild(link);
 
     } catch (error) {
         alert("Erro no processamento do relatório: " + error.message);
-    }
-}
-        async function deleteAulaFromServer(id) {
-    if (!currentUserProfile) return;
-    const minhaRole = currentUserProfile.role || '';
-
-    if (minhaRole === 'superAdmin' || minhaRole === 'coordenador' || minhaRole === 'professor') {
-        if (confirm("Tem certeza de que deseja remover permanentemente o registro desta aula?")) {
-            try {
-                await db.collection("aulas").doc(id).delete();
-                alert("Aula excluída com sucesso!");
-            } catch (error) {
-                console.error("Erro ao deletar aula:", error);
-                alert("Ocorreu um erro ao tentar excluir a aula.");
-            }
-        }
-    } else {
-        alert("Ação negada: Seu perfil de acesso não possui permissão para excluir aulas.");
     }
 }
 function imprimirBoletim() {
