@@ -1426,7 +1426,9 @@ function listenMensagemImportante(idTurma) {
                 // EXIGÊNCIA: Somente SuperAdmin pode apagar Turmas. Coordenador NÃO pode.
                 const del = currentUserProfile?.role === 'superAdmin' ? `<button onclick="deleteTurma('${t.id}')" class="bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-trash"></i></button>` : '';
                 
-                tbody.innerHTML += `<tr class="border-b"><td class="py-3"><strong>${t.nome}</strong><br><span class="text-[10px] text-slate-400 uppercase font-bold">${t.segmento} (${t.turno})</span><br><span class="text-[11px] text-emerald-600 font-medium"><i class="fa-solid fa-chalkboard-user mr-1"></i>Regente: ${reg}</span></td><td class="text-center font-bold text-sm">${c}</td><td class="text-right space-x-1 whitespace-nowrap"><button onclick="openManageStudentsModal('${t.id}')" class="bg-brandBlue text-white px-2.5 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-users mr-1"></i> Alunos</button><button onclick="openManageSubjectsModal('${t.id}')" class="bg-brandPink text-white px-2.5 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-book mr-1"></i> Grade</button>${del}</td></tr>`;
+                tbody.innerHTML += `<tr class="border-b"><td class="py-3"><strong>${t.nome}</strong><br><span class="text-[10px] text-slate-400 uppercase font-bold">${t.segmento} (${t.turno})</span><br><span class="text-[11px] text-emerald-600 font-medium"><i class="fa-solid fa-chalkboard-user mr-1"></i>Regente: ${reg}</span></td><td class="text-center font-bold text-sm">${c}</td><td class="text-right space-x-1 whitespace-nowrap"><button onclick="openManageStudentsModal('${t.id}')" class="bg-brandBlue text-white px-2.5 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-users mr-1"></i> Alunos</button><button onclick="openManageSubjectsModal('${t.id}')" class="bg-brandPink text-white px-2.5 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-book mr-1"></i> Grade</button>${del}<button onclick="gerarRelatorioTurmaDireto('${t.id}', '${t.nome}')" class="bg-emerald-100 text-emerald-600 px-2 py-1 rounded ml-1" title="Baixar Planilha">
+    <i class="fa-solid fa-file-excel"></i> Relatrório
+</button></td></tr>`;
             });
         }
         async function deleteTurma(id) { 
@@ -2004,7 +2006,115 @@ function renderizarDadosFrequencia(dataDoc, cont) {
         async function handleLogin(e) { e.preventDefault(); try { await auth.signInWithEmailAndPassword(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); } catch(err) { alert("Erro de login."); } }
         async function handleForgotPassword() { const e = document.getElementById('loginEmail').value.trim(); if(!e) { alert("Digite o e-mail."); return; } try { await auth.sendPasswordResetEmail(e); alert("Link enviado."); } catch(err) { alert("Link enviado."); } }
         async function handleLogout() { await auth.signOut(); window.location.reload(); }
-		async function deleteAulaFromServer(id) {
+		async function gerarRelatorioTurmaDireto(turmaId, turmaNome) {
+    try {
+        let snapshotAlunos = await db.collection("usuarios").where("turmaId", "==", turmaId).get();
+        if (snapshotAlunos.empty) snapshotAlunos = await db.collection("usuarios").where("turma", "==", turmaId).get();
+        if (snapshotAlunos.empty) snapshotAlunos = await db.collection("alunos").where("turmaId", "==", turmaId).get();
+        if (snapshotAlunos.empty) snapshotAlunos = await db.collection("alunos").where("turma", "==", turmaId).get();
+
+        if (snapshotAlunos.empty) {
+            alert("Nenhum aluno localizado nesta turma.");
+            return;
+        }
+
+        let materiasSet = new Set();
+        let dadosAlunos = [];
+
+        for (const docAluno of snapshotAlunos.docs) {
+            const aluno = docAluno.data();
+            const alunoId = docAluno.id;
+            const nomeAluno = aluno.nome || aluno.name || "Sem Nome";
+
+            const snapshotNotas = await db.collection("alunos").doc(alunoId).collection("notas").get();
+            
+            // Estrutura para separar as notas organizadas por matéria e por unidade
+            let mapaNotas = {};
+
+            snapshotNotas.forEach(docNota => {
+                const dataNota = docNota.data();
+                const materia = dataNota.materia;
+                // Pega a unidade (u1, u2, u3, u4) vinda do banco
+                const unidade = dataNota.unidade || docNota.id.split('_')[1] || "u1"; 
+                
+                if (materia) {
+                    materiasSet.add(materia);
+                    if (!mapaNotas[materia]) {
+                        mapaNotas[materia] = { u1: 0, u2: 0, u3: 0, u4: 0 };
+                    }
+                    
+                    let b1 = parseFloat(dataNota.b1) || 0;
+                    let b2 = parseFloat(dataNota.b2) || 0;
+                    let rec = parseFloat(dataNota.rec) || 0;
+                    
+                    // Média daquela unidade específica
+                    let mediaUnidade = (b1 + b2) / 2;
+                    if (rec > mediaUnidade) {
+                        mediaUnidade = rec;
+                    }
+                    
+                    // Salva na unidade correspondente
+                    if (mapaNotas[materia].hasOwnProperty(unidade)) {
+                        mapaNotas[materia][unidade] = mediaUnidade;
+                    }
+                }
+            });
+
+            // Calcula a Média Final exata dividindo a soma das 4 unidades por 4
+            let mediasFinais = {};
+            for (let mat in mapaNotas) {
+                let somaUnidades = mapaNotas[mat].u1 + mapaNotas[mat].u2 + mapaNotas[mat].u3 + mapaNotas[mat].u4;
+                mediasFinais[mat] = somaUnidades / 4;
+            }
+
+            dadosAlunos.push({ nome: nomeAluno, medias: mediasFinais });
+        }
+
+        let listaMaterias = Array.from(materiasSet).sort();
+
+        var csv = "\uFEFF"; 
+        csv += "RELATÓRIO DE RENDIMENTO ESCOLAR\n";
+        csv += "Turma:;" + turmaNome + "\n";
+        csv += "Data de Emissão:;" + new Date().toLocaleDateString('pt-BR') + "\n\n";
+        
+        csv += "Nome do Aluno;";
+        listaMaterias.forEach(m => { csv += m + ";"; });
+        csv += "Situação Final\n";
+
+        dadosAlunos.forEach(aluno => {
+            csv += `"${aluno.nome}";`;
+            let retidoEmAlguma = false;
+
+            listaMaterias.forEach(materia => {
+                if (aluno.medias[materia] !== undefined) {
+                    let mediaFinalMateria = aluno.medias[materia];
+                    
+                    // Se ficar abaixo de 6.0 (ou a média da sua escola), sinaliza retido
+                    if (mediaFinalMateria < 6.0) retidoEmAlguma = true;
+
+                    csv += `"${mediaFinalMateria.toFixed(1)}";`;
+                } else {
+                    csv += `"0.0";`; 
+                }
+            });
+
+            let situacaoFinal = retidoEmAlguma ? "Retido" : "Aprovado";
+            csv += `"${situacaoFinal}"\n`;
+        });
+
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", "Boletim_Consolidado_" + turmaNome.replace(/\s+/g, '_') + ".csv");
+        document.body.appendChild(link); 
+        link.click(); 
+        document.body.removeChild(link);
+
+    } catch (error) {
+        alert("Erro no processamento do relatório: " + error.message);
+    }
+}
+        async function deleteAulaFromServer(id) {
     if (!currentUserProfile) return;
     const minhaRole = currentUserProfile.role || '';
 
