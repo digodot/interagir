@@ -2185,13 +2185,154 @@ function renderizarDadosFrequencia(dataDoc, cont) {
     }
 }
 function imprimirBoletim() {
-        const tabela = document.getElementById('pais-table-body').closest('table').parentElement.innerHTML;
-        const nomeAluno = document.getElementById('pais-view-nome').innerText;
-        const turmaAluno = document.getElementById('pais-view-turma').innerText;
-        const janela = window.open('', '', 'width=900,height=700');
-        janela.document.write('<html><head><title>Boletim</title><script src="https://cdn.tailwindcss.com"><\/script></head><body><div class="p-6"><h1 class="text-xl font-bold mb-4">Escola Interagir</h1><p><b>Aluno:</b> ' + nomeAluno + ' | ' + turmaAluno + '</p><table class="w-full mt-4 border">' + tabela + '</table></div><script>window.onload=function(){window.print();window.close();}<\/script></body></html>');
-        janela.document.close();
-    }
+    // 1. Captura os dados essenciais da tela
+    const nomeAluno = document.getElementById('pais-view-nome')?.innerText || 'Não informado';
+    const turmaAluno = document.getElementById('pais-view-turma')?.innerText || 'Não informado';
+    
+    // Captura a tabela correta do boletim usando o ID do corpo das notas
+    const tabelaElement = document.getElementById('pais-table-body')?.closest('table');
+    const tabelaNotas = tabelaElement ? tabelaElement.outerHTML : 'Tabela de notas não localizada';
+
+    // 2. Abre a janela de impressão
+    const janela = window.open('', '_blank', 'width=900,height=700');
+    
+    // 3. Monta o HTML com design elegante e CSS de impressão corrigido
+    janela.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Boletim Escolar - ${nomeAluno}</title>
+            <style>
+                /* Estilos Gerais de Página */
+                body {
+                    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                    color: #334155;
+                    margin: 0;
+                    padding: 30px;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                
+                /* Cabeçalho do Boletim */
+                .header-container {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    border-bottom: 3px solid #1e3a8a;
+                    padding-bottom: 20px;
+                    margin-bottom: 30px;
+                }
+                .logo-escola {
+                    max-height: 80px;
+                    max-width: 200px;
+                    object-fit: contain;
+                }
+                .titulo-sistema {
+                    text-align: right;
+                }
+                .titulo-sistema h1 {
+                    margin: 0;
+                    font-size: 24px;
+                    color: #1e3a8a;
+                    font-weight: 800;
+                }
+                .titulo-sistema p {
+                    margin: 5px 0 0 0;
+                    font-size: 14px;
+                    color: #64748b;
+                }
+
+                /* Ficha do Aluno */
+                .dados-aluno {
+                    background-color: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    padding: 15px 20px;
+                    margin-bottom: 30px;
+                    display: flex;
+                    gap: 40px;
+                }
+                .dados-aluno p {
+                    margin: 0;
+                    font-size: 14px;
+                }
+                .dados-aluno strong {
+                    color: #1e3a8a;
+                }
+
+                /* Customização Estilizada da Tabela */
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                    font-size: 13px;
+                }
+                th {
+                    background-color: #1e3a8a !important;
+                    color: #ffffff !important;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    padding: 10px;
+                    border: 1px solid #1e3a8a;
+                }
+                td {
+                    padding: 10px;
+                    text-align: center;
+                    border: 1px solid #cbd5e1;
+                }
+                tr:nth-child(even) {
+                    background-color: #f8fafc;
+                }
+
+                /* Cores de status das notas */
+                .text-red-600, td:contains("Retido") { color: #dc2626 !important; font-weight: bold; }
+                .text-green-600, td:contains("Aprovado") { color: #16a34a !important; font-weight: bold; }
+
+                /* Força que o navegador aplique as cores na hora de imprimir */
+                @media print {
+                    body { padding: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            
+            <!-- Cabeçalho Oficial -->
+            <div class="header-container">
+                <!-- SUBSTITUA O SRC ABAIXO PELO CAMINHO DA SUA LOGOMARCA (Ex: imagens/logo.png ou link da web) -->
+                <img class="logo-escola" src="https://github.com/digodot/interagir/blob/main/logo.png?raw=true" alt="Logomarca da Escola">
+                
+                <div class="titulo-sistema">
+                    <h1>Escola Interagir</h1>
+                    <p>Boletim Escolar Oficial</p>
+                </div>
+            </div>
+
+            <!-- Ficha Técnica -->
+            <div class="dados-aluno">
+                <p><strong>ALUNO:</strong> ${nomeAluno}</p>
+                <p><strong>TURMA:</strong> ${turmaAluno}</p>
+                <p><strong>ANO LETIVO:</strong> ${new Date().getFullYear()}</p>
+            </div>
+
+            <!-- Tabela de Rendimento -->
+            <div class="tabela-boletim">
+                ${tabelaNotas}
+            </div>
+
+            <script>
+                // Executa a impressão assim que o conteúdo e imagens carregarem completamente
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    janela.document.close();
+}
 
     </script>
 <!-- MODAL ISOLADO PARA MENSAGEM IMPORTANTE -->
