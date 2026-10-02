@@ -1,0 +1,9 @@
+{
+  "short_name": "Interagir",
+  "name": "Portal Escola Interagir",
+  "icons": [],
+  "start_url": ".",
+  "background_color": "#ffffff",
+  "theme_color": "#1560CD",
+  "display": "standalone"
+}
