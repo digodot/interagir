@@ -1645,7 +1645,107 @@
             if (aId) loadConvivenciaAluno(aId);
         }
 
-        loadSelectedStudentGrades
+        async function loadSelectedStudentGrades() {
+    const aId = document.getElementById('boletim-aluno-select')?.value; 
+    const tId = document.getElementById('boletim-turma-select')?.value;
+
+    if (!aId || !tId) return;
+
+    const aluno = APP_DATA.alunos ? APP_DATA.alunos.find(x => x.id === aId) : null; 
+    const turma = APP_DATA.turmas ? APP_DATA.turmas.find(x => x.id === tId) : null;
+    
+    const printNome = document.getElementById('bol-print-nome');
+    const printTurma = document.getElementById('bol-print-turma');
+    if (printNome) printNome.innerText = aluno ? aluno.nome : '-'; 
+    if (printTurma) printTurma.innerText = turma ? turma.nome : '-';
+    
+    const tbody = document.getElementById('bol-table-body'); 
+    if (!tbody) return; 
+    tbody.innerHTML = ''; 
+
+    // Oculta tabela de notas se for turma de Educação Infantil
+    const tableContainer = tbody.closest('.table-container');
+    const isInfantil = turma && (turma.segmento || '').toLowerCase().includes('infantil');
+
+    if (isInfantil) {
+        if (tableContainer) tableContainer.classList.add('hidden');
+        return;
+    } else {
+        if (tableContainer) tableContainer.classList.remove('hidden');
+    }
+    
+    try {
+        const snap = await db.collection("alunos").doc(aId).collection("notas").get(); 
+        let map = {}; 
+        
+        snap.forEach(d => { 
+            const data = d.data();
+            if (data.materia) {
+                if (!map[data.materia]) {
+                    map[data.materia] = {};
+                }
+                const und = data.unidade || 'u1';
+                map[data.materia][und] = data;
+            }
+        });
+        
+        if (turma && turma.grades) { 
+            turma.grades.forEach(g => {
+                const matData = map[g.materia] || {};
+                let somaMediasUnidades = 0;
+                let unidadesComNota = 0;
+                
+                const getUnitCols = (uKey) => {
+                    const u = matData[uKey] || {};
+                    const b1 = u.b1 !== undefined ? parseFloat(u.b1).toFixed(1) : '-';
+                    const b2 = u.b2 !== undefined ? parseFloat(u.b2).toFixed(1) : '-';
+                    const rec = u.rec !== undefined ? parseFloat(u.rec).toFixed(1) : '-';
+                    
+                    if (b1 !== '-' && b2 !== '-') {
+                        let mediaRegular = (parseFloat(b1) + parseFloat(b2)) / 2;
+                        let mediaUnidade = (rec !== '-') ? parseFloat(rec) : mediaRegular;
+                        somaMediasUnidades += mediaUnidade;
+                        unidadesComNota++;
+                    }
+                    
+                    return `<td class="p-1 border text-center">${b1}</td>
+                            <td class="p-1 border text-center">${b2}</td>
+                            <td class="p-1 border text-center text-purple-600 font-medium">${rec}</td>`;
+                };
+
+                const colU1 = getUnitCols('u1');
+                const colU2 = getUnitCols('u2');
+                const colU3 = getUnitCols('u3');
+                const colU4 = getUnitCols('u4');
+                
+                let mediaFinal = '-';
+                let resultado = '-';
+                
+                if (unidadesComNota > 0) {
+                    mediaFinal = (somaMediasUnidades / unidadesComNota).toFixed(1);
+                    if (parseFloat(mediaFinal) >= 6.0) {
+                        resultado = '<span class="text-emerald-600 font-bold">Aprovado</span>';
+                    } else {
+                        resultado = '<span class="text-rose-600 font-bold">Retido</span>';
+                    }
+                }
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-2 border font-bold">${g.materia}</td>
+                        ${colU1}
+                        ${colU2}
+                        ${colU3}
+                        ${colU4}
+                        <td class="p-2 border text-center bg-slate-50 font-bold text-brandBlue">${mediaFinal}</td>
+                        <td class="p-2 border text-center">${resultado}</td>
+                    </tr>`;
+            }); 
+        }
+    } catch (err) {
+        console.error("Erro ao carregar notas:", err);
+    }
+}
 
         async function saveGrade(e) {
             e.preventDefault();
