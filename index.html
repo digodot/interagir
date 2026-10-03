@@ -549,6 +549,38 @@
         </section>
 
         <section id="sec-pais" class="tab-content hidden">
+            <div id="pais-convivencia-section" class="border-t pt-4 space-y-3 hidden">
+    <div class="flex justify-between items-center">
+        <h3 class="font-black text-amber-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-face-smile text-amber-500"></i> Convivência Escolar
+        </h3>
+        <!-- BOTÃO DE IMPRESSÃO EXCLUSIVO -->
+        <button onclick="imprimirConvivenciaPais()" class="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs py-1.5 px-3 rounded-xl shadow-sm transition-all">
+            <i class="fa-solid fa-print"></i> Imprimir Convivência
+        </button>
+    </div>
+
+    <!-- Tabela para os Pais -->
+    <div class="overflow-x-auto rounded-xl border border-slate-200">
+        <table class="w-full text-left text-xs border-collapse">
+            <thead>
+                <tr class="bg-slate-100 text-slate-600 font-bold border-b">
+                    <th class="p-2">Critério</th>
+                    <th class="p-2 text-center">1ª U</th>
+                    <th class="p-2 text-center">2ª U</th>
+                    <th class="p-2 text-center">3ª U</th>
+                    <th class="p-2 text-center">4ª U</th>
+                </tr>
+            </thead>
+            <tbody id="pais-convivencia-table-body" class="divide-y divide-slate-100 font-medium"></tbody>
+        </table>
+    </div>
+
+    <!-- Resumo Pedagógico para os Pais -->
+    <div class="p-3 bg-amber-50/70 rounded-xl border border-amber-200 text-xs text-slate-700" id="pais-convivencia-resumo">
+        <p class="text-slate-400 italic text-[11px]">Carregando avaliação de convivência...</p>
+    </div>
+</div>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <div id="box-filtro-pais-admin" class="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm border-t-4 border-brandYellow h-fit">
                     <h3 class="font-bold text-slate-700 text-sm mb-3">Filtro Familiar (Painel de Gestão)</h3>
@@ -2658,6 +2690,98 @@ async function loadConvivenciaPais(alunoId) {
                 .catch(err => console.log('Erro ao registrar PWA:', err));
             });
         }
+
+        function imprimirConvivenciaPais() {
+    const nomeAluno = document.getElementById('pais-view-nome')?.innerText || 'Não informado';
+    const turmaAluno = document.getElementById('pais-view-turma')?.innerText || 'Não informado';
+    
+    const tabelaElement = document.getElementById('pais-convivencia-table-body')?.closest('table');
+    const tabelaConvivencia = tabelaElement ? tabelaElement.outerHTML : 'Tabela não localizada';
+    const resumoPedagogico = document.getElementById('pais-convivencia-resumo')?.innerHTML || '';
+
+    const janela = window.open('', '_blank', 'width=900,height=700');
+    
+    janela.document.write(`
+        <!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+            <title>Convivência Escolar - ${nomeAluno}</title>
+            <style>
+                body {
+                    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                    color: #334155;
+                    margin: 0;
+                    padding: 30px;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                .header-container {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    border-bottom: 3px solid #f59e0b;
+                    padding-bottom: 20px;
+                    margin-bottom: 25px;
+                }
+                .logo-escola { max-height: 80px; max-width: 200px; object-fit: contain; }
+                .titulo-sistema { text-align: right; }
+                .titulo-sistema h1 { margin: 0; font-size: 22px; color: #d97706; font-weight: 800; }
+                .titulo-sistema p { margin: 5px 0 0 0; font-size: 13px; color: #64748b; }
+                .dados-aluno {
+                    background-color: #fffbeb;
+                    border: 1px solid #fef3c7;
+                    border-radius: 8px;
+                    padding: 12px 20px;
+                    margin-bottom: 25px;
+                    display: flex;
+                    gap: 30px;
+                    font-size: 13px;
+                }
+                .dados-aluno strong { color: #b45309; }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+                th { background-color: #f59e0b !important; color: #ffffff !important; padding: 8px; border: 1px solid #d97706; }
+                td { padding: 8px; text-align: center; border: 1px solid #cbd5e1; }
+                td:first-child { text-align: left; }
+                .resumo-card {
+                    margin-top: 20px;
+                    padding: 15px;
+                    background-color: #fffbeb;
+                    border: 1px solid #fde68a;
+                    border-radius: 8px;
+                    font-size: 12px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header-container">
+                <img class="logo-escola" src="https://github.com/digodot/interagir/blob/main/logo.png?raw=true" alt="Logomarca da Escola">
+                <div class="titulo-sistema">
+                    <h1>Escola Interagir</h1>
+                    <p>Relatório de Convivência Escolar</p>
+                </div>
+            </div>
+
+            <div class="dados-aluno">
+                <p><strong>ALUNO:</strong> ${nomeAluno}</p>
+                <p><strong>TURMA:</strong> ${turmaAluno}</p>
+                <p><strong>ANO LETIVO:</strong> ${new Date().getFullYear()}</p>
+            </div>
+
+            <div>${tabelaConvivencia}</div>
+            <div class="resumo-card">${resumoPedagogico}</div>
+
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() { window.close(); }, 500);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    janela.document.close();
+}
     </script>
 
     <div class="text-center py-4 border-t border-slate-200/50 text-[11px] text-slate-400 font-medium">
