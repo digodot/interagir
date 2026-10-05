@@ -326,7 +326,7 @@
 </select>
                             <div class="mt-2">
                                 <label class="block font-medium mb-1 text-slate-700 text-xs">Nota do Bimestre (0.0 a 10.0):</label>
-                                <input type="number" id="nota-valor" min="0" max="10" step="0.1" required placeholder="Ex: 8.5" class="w-full p-3 bg-slate-50 border rounded-xl text-sm">
+                                <input type="number" id="nota-valor" min="0" max="10" step="0.1" placeholder="Deixe em branco para apagar..." class="w-full p-3 bg-slate-50 border rounded-xl text-sm">
                             </div>
                             <button type="submit" class="w-full py-3 bg-brandBlue text-white font-bold rounded-xl text-sm shadow-sm mt-3">Gravar Média</button>
                         </form>
@@ -1748,42 +1748,65 @@
 }
 
         async function saveGrade(e) {
-            e.preventDefault();
-            const aId = document.getElementById('boletim-aluno-select').value;
-            const materia = document.getElementById('nota-materia').value;
-            const unidade = document.getElementById('nota-unidade').value; 
-            const periodo = document.getElementById('nota-periodo').value;
-            const valor = parseFloat(document.getElementById('nota-valor').value);
+    e.preventDefault();
+    const aId = document.getElementById('boletim-aluno-select').value;
+    const materia = document.getElementById('nota-materia').value;
+    const unidade = document.getElementById('nota-unidade').value; 
+    const periodo = document.getElementById('nota-periodo').value;
+    const valorInput = document.getElementById('nota-valor').value.trim();
 
-            if(!aId || !materia || !unidade || !periodo || isNaN(valor)) {
-                alert("Preencha todos os campos corretamente.");
+    if (!aId || !materia || !unidade || !periodo) {
+        alert("Selecione a disciplina, unidade e avaliação.");
+        return;
+    }
+
+    try {
+        const docId = `${materia}_${unidade}`;
+        const docRef = db.collection("alunos").doc(aId).collection("notas").doc(docId);
+        const docSnap = await docRef.get();
+
+        // Se o campo estiver em branco, apaga a nota
+        if (valorInput === '') {
+            if (docSnap.exists) {
+                let dadosAtuais = docSnap.data();
+                delete dadosAtuais[periodo];
+
+                // Se ainda existirem outras notas no documento, atualiza; senão, apaga o documento
+                const chavesNotas = ['b1', 'b2', 'rec'].filter(k => dadosAtuais[k] !== undefined);
+                if (chavesNotas.length > 0) {
+                    await docRef.update({
+                        [periodo]: firebase.firestore.FieldValue.delete()
+                    });
+                } else {
+                    await docRef.delete();
+                }
+            }
+            alert("Nota removida com sucesso!");
+        } else {
+            // Se tiver um valor numérico, grava/atualiza a nota
+            const valor = parseFloat(valorInput);
+            if (isNaN(valor) || valor < 0 || valor > 10) {
+                alert("Digite uma nota válida entre 0.0 e 10.0.");
                 return;
             }
 
-            try {
-                const docId = `${materia}_${unidade}`;
-                const docRef = db.collection("alunos").doc(aId).collection("notas").doc(docId);
-                const docSnap = await docRef.get();
+            let dadosUpdate = {
+                materia: materia,
+                unidade: unidade,
+                [periodo]: valor
+            };
 
-                let dadosUpdate = {
-                    materia: materia,
-                    unidade: unidade
-                };
-                dadosUpdate[periodo] = valor; 
-
-                if (docSnap.exists) {
-                    await docRef.update(dadosUpdate);
-                } else {
-                    await docRef.set(dadosUpdate);
-                }
-
-                alert("Nota gravada com sucesso!");
-                loadSelectedStudentGrades();
-            } catch(error) {
-                console.error("Erro ao salvar nota: ", error);
-                alert("Erro ao salvar a nota no banco de dados.");
-            }
+            await docRef.set(dadosUpdate, { merge: true });
+            alert("Nota gravada com sucesso!");
         }
+
+        document.getElementById('nota-valor').value = '';
+        loadSelectedStudentGrades();
+    } catch(error) {
+        console.error("Erro ao processar nota: ", error);
+        alert("Erro ao guardar as alterações no banco de dados.");
+    }
+}
 
         // ================= FUNÇÕES DO MÓDULO DE CONVIVÊNCIA ESCOLAR =================
         function getEmojiBadge(nivel) {
